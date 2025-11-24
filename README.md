@@ -1,5 +1,36 @@
-# Vue 3 + TypeScript + Vite
+## Admin Panel
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Vue 3 + Vite admin UI for editorial workflows. It authenticates against the API Gateway's REST endpoint and can optionally call legacy CMS routes.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+### Environment
+
+Copy `.env.example` to `.env`:
+
+```bash
+cp apps/admin/.env.example apps/admin/.env
+```
+
+Variables:
+
+```env
+VITE_API_GATEWAY_URL=http://localhost:3000/api/v1
+VITE_CMS_API_URL=http://localhost:3001/api/cms
+```
+
+- `VITE_API_GATEWAY_URL` is required for `POST /admin/auth/login` and subsequent editorial proxy calls.
+- `VITE_CMS_API_URL` is optional and only used when a component still hits the CMS directly.
+
+### Auth Flow
+
+1. User submits Supabase credentials via the login form.
+2. UI calls `POST {VITE_API_GATEWAY_URL}/admin/auth/login`.
+3. The returned JWT is stored in the Pinia auth store and attached to future Axios requests via an interceptor.
+
+### Scripts
+
+```bash
+npm install       # Install deps
+npm run dev       # Start Vite dev server (http://localhost:5174)
+npm run build     # Production build
+npm run preview   # Preview build output
+```
