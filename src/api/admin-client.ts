@@ -1,41 +1,66 @@
-import axios, { AxiosError } from 'axios';
-import { useAuthStore } from '../stores/auth';
+import axios, { AxiosError, type AxiosInstance } from 'axios'
+import { useAuthStore } from '../stores/auth'
+
+const apiGatewayClient = axios.create({
+  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3000/api/v1',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
 
 const cmsApiClient = axios.create({
   baseURL: import.meta.env.VITE_CMS_API_URL || 'http://localhost:3001/api/cms',
   headers: {
     'Content-Type': 'application/json',
   },
-});
+})
 
-// Request interceptor - add auth token
-cmsApiClient.interceptors.request.use((config) => {
-  const authStore = useAuthStore();
-  if (authStore.token) {
-    config.headers.Authorization = `Bearer ${authStore.token}`;
-  }
-  return config;
-});
-
-// Response interceptor - handle errors
-cmsApiClient.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      const authStore = useAuthStore();
-      authStore.logout();
-      window.location.href = '/login';
+const attachInterceptors = (client: AxiosInstance) => {
+  client.interceptors.request.use(config => {
+    const authStore = useAuthStore()
+    if (authStore.token) {
+      config.headers = config.headers || {}
+      config.headers.Authorization = `Bearer ${authStore.token}`
     }
-    return Promise.reject(error);
+    return config
+  })
+
+  client.interceptors.response.use(
+    response => response,
+    (error: AxiosError) => {
+      if (error.response?.status === 401) {
+        const authStore = useAuthStore()
+        authStore.logout()
+        window.location.href = '/login'
+      }
+      return Promise.reject(error)
+    }
+  )
+}
+
+attachInterceptors(apiGatewayClient)
+attachInterceptors(cmsApiClient)
+
+interface ApiResponse<T> {
+  data: T
+}
+
+export interface AdminLoginSuccess {
+  accessToken: string
+  user: {
+    id: string
+    email?: string
+    role: string
   }
-);
+}
 
 export const authApi = {
   login: (email: string, password: string) =>
-    cmsApiClient.post('/auth/login', { email, password }),
-  logout: () => cmsApiClient.post('/auth/logout'),
-  me: () => cmsApiClient.get('/auth/me'),
-};
+    apiGatewayClient.post<ApiResponse<AdminLoginSuccess>>('/admin/auth/login', {
+      email,
+      password,
+    }),
+}
 
 export const gamesApi = {
   getAll: () => cmsApiClient.get('/admin/games'),
@@ -43,7 +68,7 @@ export const gamesApi = {
   create: (data: any) => cmsApiClient.post('/admin/games', data),
   update: (id: number, data: any) => cmsApiClient.put(`/admin/games/${id}`, data),
   delete: (id: number) => cmsApiClient.delete(`/admin/games/${id}`),
-};
+}
 
 export const blogApi = {
   getAll: () => cmsApiClient.get('/admin/blog'),
@@ -51,27 +76,27 @@ export const blogApi = {
   create: (data: any) => cmsApiClient.post('/admin/blog', data),
   update: (id: number, data: any) => cmsApiClient.put(`/admin/blog/${id}`, data),
   delete: (id: number) => cmsApiClient.delete(`/admin/blog/${id}`),
-};
+}
 
 export const studioApi = {
   get: () => cmsApiClient.get('/admin/studio'),
   update: (data: any) => cmsApiClient.put('/admin/studio', data),
-};
+}
 
 export const mediaApi = {
   upload: (file: File, folder?: string) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    if (folder) formData.append('folder', folder);
-    
+    const formData = new FormData()
+    formData.append('file', file)
+    if (folder) formData.append('folder', folder)
+
     return cmsApiClient.post('/admin/media', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-    });
+    })
   },
   getAll: () => cmsApiClient.get('/admin/media'),
   delete: (id: number) => cmsApiClient.delete(`/admin/media/${id}`),
-};
+}
 
-export default cmsApiClient;
+export default cmsApiClient
