@@ -8,7 +8,9 @@
     "typecheck": "nuxt typecheck",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@nuxt/content": "^3.8.2",
@@ -23,6 +25,11 @@
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
+    "@blich-studio/eslint-config": "^1.4.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-vue": "^10.6.2",
+    "typescript-eslint": "^8.48.1",
+    "vue-eslint-parser": "^10.2.0",
     "vue-tsc": "^2.1.6"
   }
 }
