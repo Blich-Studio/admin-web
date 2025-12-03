@@ -1,30 +1,31 @@
-import { defineSharedConfig } from '@blich-studio/eslint-config'
-import pluginVue from 'eslint-plugin-vue'
-import vueParser from 'vue-eslint-parser'
-import tseslint from 'typescript-eslint'
+import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
 
-export default tseslint.config(
-  {
-    ignores: ['**/*.vue', '.nuxt/**', 'dist/**', '*.config.ts', '*.config.mjs', '*.config.js'],
+export default createConfigForNuxt({
+  features: {
+    tooling: false,
+    stylistic: true,
   },
-  ...defineSharedConfig({
-    files: ['**/*.ts', '**/*.tsx'],
-    languageOptions: {
-      parserOptions: {
-        project: './.nuxt/tsconfig.app.json',
-        tsconfigRootDir: import.meta.dirname,
-      },
+})
+  .prepend({
+    ignores: ['*.config.ts', '*.config.mjs', '*.config.js'],
+  })
+  .append({
+    rules: {
+      // Vue 3 / Nuxt specific rules
+      'vue/multi-word-component-names': 'off',
+      'vue/no-v-html': 'warn',
+      'vue/require-default-prop': 'off',
+      'vue/no-multiple-template-root': 'off', // Vue 3 allows multiple roots
+      
+      // TypeScript rules
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
     },
-  }),
-  ...pluginVue.configs['flat/recommended'],
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      parser: vueParser,
-      parserOptions: {
-        parser: '@typescript-eslint/parser',
-        sourceType: 'module',
-      },
-    },
-  },
-)
+  })
