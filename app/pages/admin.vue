@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useAuthStore } from '../stores/auth'
-import type { ContentCollectionItem } from '@nuxt/content'
 
 definePageMeta({ 
   middleware: 'auth'
@@ -11,13 +10,18 @@ const { data: docs } = await useAsyncData('admin-docs', () =>
 )
 
 const authStore = useAuthStore()
+
+const handleLogout = () => {
+  authStore.logout()
+  navigateTo('/login')
+}
 </script>
 
 <template>
   <div class="admin">
     <header>
       <h1>CMS Admin</h1>
-      <button class="btn danger" @click="authStore.logout">Logout</button>
+      <button class="btn danger" @click="handleLogout">Logout</button>
     </header>
     
     <section>
