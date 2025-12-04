@@ -2,7 +2,17 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-
+  app: {
+    head: {
+    title: 'Blich CMS',
+    meta: [
+      { name: 'X-Content-Type-Options', content: 'nosniff' },
+        { name: 'X-Frame-Options', content: 'DENY' },
+        { name: 'X-XSS-Protection', content: '1; mode=block' },
+        { name: 'referrer', content: 'strict-origin-when-cross-origin' }
+    ]
+  },
+  },  
   modules: [
     '@nuxt/content',
     '@nuxt/eslint',
@@ -13,6 +23,13 @@ export default defineNuxtConfig({
   ],
   css: ['@/assets/css/main.scss'],
   nitro: {
-    preset: 'bun'
+    preset: 'bun',
+    routeRules: {
+      '/**': {
+        headers: {
+          'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'  https:;"
+        }
+      }
+    }
   }
 })
