@@ -12,7 +12,20 @@ export default defineNuxtConfig({
         { name: 'referrer', content: 'strict-origin-when-cross-origin' }
     ]
   },
-  },  
+  },
+  runtimeConfig: {
+    public: {
+      apiUrl: process.env.NUXT_PUBLIC_API_URL,
+    },
+  },
+  hooks: {
+    'ready': (nuxt) => {
+      const apiUrl = nuxt.options.runtimeConfig.public.apiUrl
+      if (!apiUrl) {
+        throw new Error('NUXT_PUBLIC_API_URL environment variable is required. Please set it in your .env file.')
+      }
+    },
+  },
   modules: [
     '@nuxt/content',
     '@nuxt/eslint',

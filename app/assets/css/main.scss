@@ -1,32 +1,105 @@
-// Global variables and mixins
-$primary: #3b82f6;
-$dark: #1f2937;
+// Blich CMS - Clay/Terracotta Design System
+// Matching blich-studio-website design
+
+// Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 // Components
 @use "components/content-card";
+@use "components/admin";
+@use "components/markdown-editor";
 
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
+// CSS Variables (matching website)
+:root {
+  // Light theme - warm desert sunset palette
+  --background: oklch(0.97 0.02 50);
+  --foreground: oklch(0.2 0.03 40);
+  --card: oklch(0.99 0.01 60);
+  --card-foreground: oklch(0.2 0.03 40);
+
+  // Clay/stop-motion inspired colors
+  --clay-beige: oklch(0.85 0.08 60);
+  --clay-orange: oklch(0.68 0.14 45);
+  --clay-rust: oklch(0.55 0.15 35);
+  --clay-deep: oklch(0.35 0.08 25);
+  --clay-terracotta: oklch(0.58 0.12 40);
+  --film-grain: oklch(0.75 0.06 70);
+
+  --primary: var(--clay-rust);
+  --primary-foreground: oklch(0.99 0.01 60);
+  --secondary: oklch(0.92 0.02 55);
+  --secondary-foreground: oklch(0.2 0.03 40);
+  --muted: oklch(0.94 0.02 55);
+  --muted-foreground: oklch(0.45 0.03 40);
+  --border: oklch(0.88 0.02 55);
+  --input: oklch(0.88 0.02 55);
+  --ring: var(--clay-orange);
+  --radius: 0.25rem;
+
+  // Fonts
+  --font-display: "Space Grotesk", "Geist", sans-serif;
+  --font-body: "Inter", "Geist", sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", monospace;
 }
 
 .dark {
-  background: $dark;
-  color: white;
+  // Dark theme - clay and earth tones
+  --background: oklch(0.12 0.015 280);
+  --foreground: oklch(0.92 0.01 80);
+  --card: oklch(0.16 0.02 285);
+  --card-foreground: oklch(0.92 0.01 80);
+
+  --clay-beige: oklch(0.78 0.06 60);
+  --clay-orange: oklch(0.68 0.14 45);
+  --clay-rust: oklch(0.52 0.12 35);
+  --clay-deep: oklch(0.35 0.08 25);
+  --film-grain: oklch(0.88 0.03 70);
+
+  --primary: var(--clay-orange);
+  --primary-foreground: oklch(0.12 0.015 280);
+  --secondary: oklch(0.22 0.025 285);
+  --secondary-foreground: oklch(0.92 0.01 80);
+  --muted: oklch(0.2 0.02 282);
+  --muted-foreground: oklch(0.62 0.02 280);
+  --border: oklch(0.24 0.025 285);
+  --input: oklch(0.24 0.025 285);
+  --ring: var(--clay-orange);
 }
 
-// Admin styling
-.admin {
-  @extend .dark;
-  padding: 2rem;
+// Base styles
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-.btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  
-  &.primary { background: $primary; color: white; }
-  &.danger { background: #ef4444; color: white; }
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--background);
+  color: var(--foreground);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+code, pre {
+  font-family: var(--font-mono);
 }

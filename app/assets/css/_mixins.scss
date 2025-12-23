@@ -1,0 +1,150 @@
+@use './variables' as *;
+
+// ============================
+// Container Mixin
+// ============================
+@mixin container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  @media (min-width: $breakpoint-sm) {
+    max-width: 640px;
+  }
+
+  @media (min-width: $breakpoint-md) {
+    max-width: 768px;
+  }
+
+  @media (min-width: $breakpoint-lg) {
+    max-width: 1024px;
+  }
+
+  @media (min-width: $breakpoint-xl) {
+    max-width: 1280px;
+  }
+
+  @media (min-width: $breakpoint-2xl) {
+    max-width: 1536px;
+  }
+}
+
+// ============================
+// Responsive Breakpoint Mixins
+// ============================
+@mixin sm {
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin xl {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+@mixin xxl {
+  @media (min-width: $breakpoint-2xl) {
+    @content;
+  }
+}
+
+// ============================
+// Flexbox Utilities
+// ============================
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// ============================
+// Typography Mixins
+// ============================
+@mixin heading-1 {
+  font-family: $font-display;
+  font-size: clamp(2rem, 6vw, $text-4xl);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@mixin heading-2 {
+  font-family: $font-display;
+  font-size: clamp(1.5rem, 4vw, $text-2xl);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@mixin body-text {
+  font-family: $font-body;
+  font-size: $text-base;
+  line-height: 1.6;
+  color: $color-foreground;
+}
+
+@mixin mono-text {
+  font-family: $font-mono;
+  font-size: $text-sm;
+  letter-spacing: 0.05em;
+}
+
+// ============================
+// Interactive State Mixins
+// ============================
+@mixin hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid $color-ring;
+    outline-offset: 2px;
+  }
+}
+
+// ============================
+// Visual Effect Mixins
+// ============================
+@mixin card-style {
+  background: $color-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+}
+
+@mixin glass-effect {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

@@ -23,13 +23,13 @@ const { data: docs } = await useAsyncData('docs', async () => {
     <h2>Published Content</h2>
     <div v-if="docs && docs.length > 0" class="content-list">
       <ContentCard v-for="doc in docs" :key="doc.path">
-  <template #title>
-    <NuxtLink :to="doc.path">{{ doc.title || doc.path }}</NuxtLink>
-  </template>
-  <template #description>
-    {{ doc.description }}
-  </template>
-</ContentCard>
+        <template #title>
+          <NuxtLink :to="doc.path">{{ doc.title || doc.path }}</NuxtLink>
+        </template>
+        <template #description>
+          {{ doc.description }}
+        </template>
+      </ContentCard>
     </div>
     <p v-else>No content published yet.</p>
   </main>

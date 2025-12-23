@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.bun/
+
+# Build outputs
+.output/
+.nuxt/
+dist/
+
+# Development
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Misc
+*.md
+*.log
+.DS_Store
+Thumbs.db
+
+# Test files
+*.test.ts
+*.spec.ts
+__tests__/
+coverage/
+
+# Content (if using external CMS)
+# content/
