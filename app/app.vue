@@ -1,6 +1,13 @@
+<script setup lang="ts">
+const route = useRoute()
+
+// Hide the global header on admin pages (they have their own sidebar)
+const showHeader = computed(() => !route.path.startsWith('/admin'))
+</script>
+
 <template>
   <div>
-    <header class="site-header">
+    <header v-if="showHeader" class="site-header">
       <h1>Blich CMS</h1>
       <nav>
         <NuxtLink to="/">Home</NuxtLink>

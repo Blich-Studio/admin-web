@@ -5,9 +5,14 @@ import type {
   ArticleListItem,
   CreateArticleDto,
   UpdateArticleDto,
-  ApiResponse,
   ApiMeta,
 } from '~/types/api'
+
+// Response shape for list endpoints (after useApi unwraps outer { data })
+interface ListResponse<T> {
+  data: T[]
+  meta?: ApiMeta
+}
 
 interface ArticlesState {
   articles: ArticleListItem[]
@@ -51,7 +56,8 @@ export const useArticlesStore = defineStore('articles', {
           ? options?.authorId 
           : authStore.user?.id
 
-        const response = await api.get<ApiResponse<ArticleListItem[]>>('/articles', {
+        // List endpoints return { data: [...], meta: {...} } after unwrap
+        const response = await api.get<ListResponse<ArticleListItem>>('/articles', {
           page: options?.page ?? 1,
           limit: options?.limit ?? 20,
           status: options?.status,
@@ -78,9 +84,10 @@ export const useArticlesStore = defineStore('articles', {
 
       try {
         const api = useApi()
-        const response = await api.get<ApiResponse<Article>>(`/articles/${id}`)
-        this.currentArticle = response.data
-        return response.data
+        // Single item endpoints return the item directly after unwrap
+        const article = await api.get<Article>(`/articles/${id}`)
+        this.currentArticle = article
+        return article
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch article'
         throw err
@@ -98,8 +105,9 @@ export const useArticlesStore = defineStore('articles', {
 
       try {
         const api = useApi()
-        const response = await api.post<ApiResponse<Article>>('/articles', data as unknown as Record<string, unknown>)
-        return response.data
+        // POST returns the created item directly after unwrap
+        const article = await api.post<Article>('/articles', data as unknown as Record<string, unknown>)
+        return article
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to create article'
         throw err
@@ -117,16 +125,17 @@ export const useArticlesStore = defineStore('articles', {
 
       try {
         const api = useApi()
-        const response = await api.put<ApiResponse<Article>>(`/articles/${id}`, data as unknown as Record<string, unknown>)
-        this.currentArticle = response.data
+        // PUT returns the updated item directly after unwrap
+        const article = await api.put<Article>(`/articles/${id}`, data as unknown as Record<string, unknown>)
+        this.currentArticle = article
 
         // Update in list if present
         const index = this.articles.findIndex(a => a.id === id)
         if (index !== -1) {
-          this.articles[index] = response.data
+          this.articles[index] = article
         }
 
-        return response.data
+        return article
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to update article'
         throw err

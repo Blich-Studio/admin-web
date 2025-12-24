@@ -13,22 +13,19 @@ interface ApiError {
 
 /**
  * Composable for making authenticated API requests to the backend
+ * Uses the Nuxt proxy to avoid CORS issues
  */
 export function useApi() {
-  const config = useRuntimeConfig()
   const authStore = useAuthStore()
 
-  const apiUrl = config.public.apiUrl
-
-  if (!apiUrl) {
-    throw new Error('API URL not configured')
-  }
+  // Use the Nuxt server proxy instead of calling the API directly
+  const baseUrl = '/api/_proxy'
 
   async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
     const { method = 'GET', body, query } = options
 
     // Build URL with query params
-    let url = `${apiUrl}${endpoint}`
+    let url = `${baseUrl}${endpoint}`
     if (query) {
       const params = new URLSearchParams()
       for (const [key, value] of Object.entries(query)) {
@@ -56,6 +53,7 @@ export function useApi() {
     const response = await fetch(url, {
       method,
       headers,
+      credentials: 'include',
       body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
     })
 
@@ -79,7 +77,9 @@ export function useApi() {
       return undefined as T
     }
 
-    return response.json()
+    // API responses are wrapped in { data: ... }, unwrap them
+    const json = await response.json()
+    return json.data !== undefined ? json.data : json
   }
 
   return {

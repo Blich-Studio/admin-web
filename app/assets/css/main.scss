@@ -1,13 +1,13 @@
 // Blich CMS - Clay/Terracotta Design System
 // Matching blich-studio-website design
 
-// Google Fonts
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
-// Components
+// Components (must come before @import for Sass rules)
 @use "components/content-card";
 @use "components/admin";
 @use "components/markdown-editor";
+
+// Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 // CSS Variables (matching website)
 :root {

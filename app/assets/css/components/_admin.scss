@@ -1,6 +1,9 @@
 // Admin Dashboard Styles - Clay/Terracotta Design System
 // Matching blich-studio-website design
 
+// Note: Using color-mix() instead of rgba() because oklch colors
+// are not compatible with Sass rgba() function
+
 // Layout Variables
 $sidebar-width: 260px;
 $header-height: 64px;
@@ -111,12 +114,12 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
     transition: all 0.15s ease;
 
     &:hover {
-      background: rgba($admin-primary, 0.1);
+      background: color-mix(in oklch, $admin-primary 10%, transparent);
       color: $admin-text;
     }
 
     &--active {
-      background: rgba($admin-primary, 0.15);
+      background: color-mix(in oklch, $admin-primary 15%, transparent);
       color: $admin-primary;
       border-right: 3px solid $admin-primary;
     }
@@ -177,7 +180,7 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
     transition: background 0.15s ease;
 
     &:hover {
-      background: rgba($admin-primary, 0.1);
+      background: color-mix(in oklch, $admin-primary 10%, transparent);
     }
 
     img {
@@ -301,7 +304,7 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
     color: white;
 
     &:hover:not(:disabled) {
-      background: darken($admin-danger, 10%);
+      background: color-mix(in oklch, $admin-danger 80%, black);
     }
   }
 
@@ -310,7 +313,7 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
     color: white;
 
     &:hover:not(:disabled) {
-      background: darken($admin-success, 10%);
+      background: color-mix(in oklch, $admin-success 80%, black);
     }
   }
 
@@ -319,7 +322,7 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
     color: white;
 
     &:hover:not(:disabled) {
-      background: darken($admin-warning, 10%);
+      background: color-mix(in oklch, $admin-warning 80%, black);
     }
   }
 
@@ -398,7 +401,7 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
   &:focus {
     outline: none;
     border-color: $admin-primary;
-    box-shadow: 0 0 0 3px rgba($admin-primary, 0.15);
+    box-shadow: 0 0 0 3px color-mix(in oklch, $admin-primary 15%, transparent);
   }
 
   &::placeholder {
@@ -491,17 +494,17 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
   text-transform: capitalize;
 
   &--draft {
-    background: rgba($admin-warning, 0.15);
+    background: color-mix(in oklch, $admin-warning 15%, transparent);
     color: $admin-warning;
   }
 
   &--published {
-    background: rgba($admin-success, 0.15);
+    background: color-mix(in oklch, $admin-success 15%, transparent);
     color: $admin-success;
   }
 
   &--archived {
-    background: rgba($admin-text-muted, 0.15);
+    background: color-mix(in oklch, $admin-text-muted 15%, transparent);
     color: $admin-text-muted;
   }
 }
@@ -512,7 +515,7 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
   align-items: center;
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
-  background: rgba($admin-primary, 0.15);
+  background: color-mix(in oklch, $admin-primary 15%, transparent);
   color: $admin-primary;
   border-radius: 0.25rem;
 
@@ -535,7 +538,7 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
     transition: background 0.15s ease;
 
     &:hover {
-      background: rgba($admin-primary, 0.3);
+      background: color-mix(in oklch, $admin-primary 30%, transparent);
     }
   }
 }

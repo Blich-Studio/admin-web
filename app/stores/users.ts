@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { ApiResponse, ApiMeta } from '~/types/api'
+import type { ApiMeta } from '~/types/api'
 
 export type UserRole = 'reader' | 'writer' | 'admin'
 
@@ -14,6 +14,12 @@ export interface UserListItem {
   avatarUrl: string | null
   createdAt: string
   lastLoginAt: string | null
+}
+
+// Response shape for list endpoints (after useApi unwraps outer { data })
+interface ListResponse<T> {
+  data: T[]
+  meta?: ApiMeta
 }
 
 interface UsersState {
@@ -51,7 +57,8 @@ export const useUsersStore = defineStore('users', {
 
       try {
         const api = useApi()
-        const response = await api.get<ApiResponse<UserListItem[]>>('/users', {
+        // List endpoints return { data: [...], meta: {...} } after unwrap
+        const response = await api.get<ListResponse<UserListItem>>('/users', {
           page: options?.page ?? 1,
           limit: options?.limit ?? 20,
           role: options?.role,
@@ -80,9 +87,10 @@ export const useUsersStore = defineStore('users', {
 
       try {
         const api = useApi()
-        const response = await api.get<ApiResponse<UserListItem>>(`/users/${id}`)
-        this.currentUser = response.data
-        return response.data
+        // Single item endpoints return the item directly after unwrap
+        const user = await api.get<UserListItem>(`/users/${id}`)
+        this.currentUser = user
+        return user
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch user'
         throw err
@@ -100,15 +108,16 @@ export const useUsersStore = defineStore('users', {
 
       try {
         const api = useApi()
-        const response = await api.put<ApiResponse<UserListItem>>(`/users/${id}/role`, { role })
+        // PUT returns the updated item directly after unwrap
+        const user = await api.put<UserListItem>(`/users/${id}/role`, { role })
         
         // Update in list if present
         const index = this.users.findIndex(u => u.id === id)
         if (index !== -1) {
-          this.users[index] = response.data
+          this.users[index] = user
         }
         
-        return response.data
+        return user
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to update user role'
         throw err
@@ -126,15 +135,16 @@ export const useUsersStore = defineStore('users', {
 
       try {
         const api = useApi()
-        const response = await api.put<ApiResponse<UserListItem>>(`/users/${id}/verification`, { isVerified })
+        // PUT returns the updated item directly after unwrap
+        const user = await api.put<UserListItem>(`/users/${id}/verification`, { isVerified })
         
         // Update in list if present
         const index = this.users.findIndex(u => u.id === id)
         if (index !== -1) {
-          this.users[index] = response.data
+          this.users[index] = user
         }
         
-        return response.data
+        return user
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to update verification status'
         throw err

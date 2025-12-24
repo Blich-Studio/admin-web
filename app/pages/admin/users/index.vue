@@ -5,16 +5,13 @@ import { useAuthStore } from '~/stores/auth'
 const usersStore = useUsersStore()
 const authStore = useAuthStore()
 
-// Check if current user is admin
-if (!authStore.isAdmin) {
-  navigateTo('/admin')
-}
-
 // State
 const searchQuery = ref('')
 const roleFilter = ref<UserRole | ''>('')
 const verifiedFilter = ref<'' | 'true' | 'false'>('')
 const currentPage = ref(1)
+const isLoading = ref(true)
+const loadError = ref<string | null>(null)
 
 // Modal states
 const showRoleModal = ref(false)
@@ -29,22 +26,40 @@ const actionLoading = ref(false)
 
 // Fetch users with filters
 const fetchUsers = async () => {
-  await usersStore.fetchUsers({
-    page: currentPage.value,
-    limit: 20,
-    role: roleFilter.value || undefined,
-    isVerified: verifiedFilter.value ? verifiedFilter.value === 'true' : undefined,
-    search: searchQuery.value || undefined,
-  })
+  isLoading.value = true
+  loadError.value = null
+  try {
+    await usersStore.fetchUsers({
+      page: currentPage.value,
+      limit: 20,
+      role: roleFilter.value || undefined,
+      isVerified: verifiedFilter.value ? verifiedFilter.value === 'true' : undefined,
+      search: searchQuery.value || undefined,
+    })
+  } catch (err) {
+    loadError.value = err instanceof Error ? err.message : 'Failed to load users'
+  } finally {
+    isLoading.value = false
+  }
 }
 
-// Initial fetch
-await fetchUsers()
+// Check admin access and initial fetch
+onMounted(async () => {
+  if (!authStore.isAdmin) {
+    await navigateTo('/admin')
+    return
+  }
+  await fetchUsers()
+})
 
 // Watch for filter changes
+let debounceTimer: ReturnType<typeof setTimeout>
 watch([searchQuery, roleFilter, verifiedFilter], () => {
-  currentPage.value = 1
-  fetchUsers()
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    currentPage.value = 1
+    fetchUsers()
+  }, 300)
 })
 
 // Actions
@@ -192,7 +207,18 @@ const getRoleBadgeClass = (role: UserRole) => {
 
     <!-- Users Table -->
     <div class="admin-card">
-      <div v-if="usersStore.loading" class="loading-spinner">
+      <!-- Error State -->
+      <div v-if="loadError" class="empty-state">
+        <Icon name="lucide:alert-circle" class="empty-state__icon" style="color: #ef4444;" />
+        <h4 class="empty-state__title">Failed to load users</h4>
+        <p class="empty-state__text">{{ loadError }}</p>
+        <button class="btn btn--primary" @click="fetchUsers">
+          <Icon name="lucide:refresh-cw" />
+          Try Again
+        </button>
+      </div>
+
+      <div v-else-if="isLoading" class="loading-spinner">
         <div class="loading-spinner__icon" />
       </div>
 
