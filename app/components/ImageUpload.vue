@@ -75,8 +75,8 @@ const uploadFile = async (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
 
-    // Upload to your API
-    const response = await api.post<{ url: string }>('/uploads', formData)
+    // Upload to your API (multipart endpoint)
+    const response = await api.post<{ url: string }>('/uploads/file', formData)
     emit('update:modelValue', response.url)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to upload file'

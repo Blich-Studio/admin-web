@@ -91,7 +91,7 @@ const uploadFiles = async (files: File[]) => {
     const uploadPromises = files.map(async (file) => {
       const formData = new FormData()
       formData.append('file', file)
-      const response = await api.post<{ url: string }>('/uploads', formData)
+      const response = await api.post<{ url: string }>('/uploads/file', formData)
       return response.url
     })
 
