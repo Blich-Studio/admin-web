@@ -14,6 +14,8 @@ const emit = defineEmits<{
 const viewMode = ref<'edit' | 'split' | 'preview'>('split')
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const showImagePicker = ref(false)
+const selectedImageUrl = ref<string | null>(null)
 
 // Render markdown preview
 const renderedPreview = computed(() => {
@@ -42,6 +44,15 @@ const insertMarkdown = (before: string, after: string = '', placeholder: string 
   })
 }
 
+// Insert image from picker
+const insertImageFromPicker = () => {
+  if (!selectedImageUrl.value) return
+  // Insert markdown image syntax: ![alt](url)
+  insertMarkdown(`![image](${selectedImageUrl.value})`, '', '')
+  showImagePicker.value = false
+  selectedImageUrl.value = null
+}
+
 // Toolbar actions
 const toolbarActions = {
   bold: () => insertMarkdown('**', '**', 'bold text'),
@@ -51,7 +62,7 @@ const toolbarActions = {
   h2: () => insertMarkdown('\n## ', '\n', 'Heading 2'),
   h3: () => insertMarkdown('\n### ', '\n', 'Heading 3'),
   link: () => insertMarkdown('[', '](url)', 'link text'),
-  image: () => insertMarkdown('![', '](image-url)', 'alt text'),
+  image: () => showImagePicker.value = true,
   code: () => insertMarkdown('`', '`', 'code'),
   codeblock: () => insertMarkdown('\n```\n', '\n```\n', 'code here'),
   quote: () => insertMarkdown('\n> ', '\n', 'quote'),
@@ -271,5 +282,112 @@ const handleKeydown = (event: KeyboardEvent) => {
         <div class="markdown-editor__preview" v-html="renderedPreview"></div>
       </div>
     </div>
+
+    <!-- Image Picker Modal -->
+    <div v-if="showImagePicker" class="markdown-editor__modal-backdrop" @click.self="showImagePicker = false">
+      <div class="markdown-editor__modal">
+        <div class="markdown-editor__modal-header">
+          <h3>Insert Image from Library</h3>
+          <button class="markdown-editor__modal-close" @click="showImagePicker = false">
+            <Icon name="lucide:x" />
+          </button>
+        </div>
+        <div class="markdown-editor__modal-body">
+          <ImagePicker v-model="selectedImageUrl" folder="general" accept="image/" />
+        </div>
+        <div class="markdown-editor__modal-footer">
+          <button
+            class="btn btn--ghost"
+            @click="showImagePicker = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn--primary"
+            :disabled="!selectedImageUrl"
+            @click="insertImageFromPicker"
+          >
+            Insert Image
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.markdown-editor__modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.markdown-editor__modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.markdown-editor__modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--admin-border, #e5e7eb);
+
+  h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+}
+
+.markdown-editor__modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--admin-bg-hover, #f3f4f6);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.markdown-editor__modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.markdown-editor__modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--admin-border, #e5e7eb);
+  justify-content: flex-end;
+}
+</style>

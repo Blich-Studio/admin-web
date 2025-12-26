@@ -39,7 +39,9 @@ function decodeJwtPayload(token: string): JwtPayload | null {
   try {
     const parts = token.split('.')
     if (parts.length !== 3) return null
-    const payload = JSON.parse(atob(parts[1]))
+    const payloadPart = parts[1]
+    if (!payloadPart) return null
+    const payload = JSON.parse(atob(payloadPart))
     return payload as JwtPayload
   }
   catch {

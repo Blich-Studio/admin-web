@@ -303,20 +303,20 @@ const getRoleBadgeClass = (role: UserRole) => {
         </table>
 
         <!-- Pagination -->
-        <div v-if="usersStore.meta && usersStore.meta.totalPages > 1" class="pagination">
+        <div v-if="(usersStore.meta?.totalPages ?? 0) > 1" class="pagination">
           <button
             class="btn btn--secondary btn--sm"
-            :disabled="!usersStore.meta.hasPrev"
+            :disabled="!(usersStore.meta?.hasPrev)"
             @click="currentPage--; fetchUsers()"
           >
             Previous
           </button>
           <span class="pagination__info">
-            Page {{ usersStore.meta.page }} of {{ usersStore.meta.totalPages }}
+            Page {{ usersStore.meta?.page ?? 1 }} of {{ usersStore.meta?.totalPages ?? 1 }}
           </span>
           <button
             class="btn btn--secondary btn--sm"
-            :disabled="!usersStore.meta.hasNext"
+            :disabled="!(usersStore.meta?.hasNext)"
             @click="currentPage++; fetchUsers()"
           >
             Next

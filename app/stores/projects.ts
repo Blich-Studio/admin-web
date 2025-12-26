@@ -67,7 +67,8 @@ export const useProjectsStore = defineStore('projects', {
           authorId,
         })
 
-        this.projects = response.data
+        // Defensive: ensure `projects` is always an array and `meta` proper shape
+        this.projects = Array.isArray(response.data) ? response.data : []
         this.meta = response.meta ?? null
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch projects'

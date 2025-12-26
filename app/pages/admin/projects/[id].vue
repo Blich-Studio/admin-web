@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useProjectsStore } from '~/stores/projects'
+import type { Tag } from '~/types/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -34,19 +35,19 @@ const loadProject = async () => {
   isLoading.value = true
   try {
     const project = await projectsStore.fetchProject(projectId.value)
-    form.title = project.title
-    form.slug = project.slug
-    form.shortDescription = project.shortDescription
-    form.description = project.description
-    form.coverImageUrl = project.coverImageUrl
+    form.title = project.title ?? ''
+    form.slug = project.slug ?? ''
+    form.shortDescription = project.shortDescription ?? ''
+    form.description = project.description ?? ''
+    form.coverImageUrl = project.coverImageUrl ?? null
     form.galleryUrls = project.galleryUrls ?? []
-    form.videoUrl = project.videoUrl
-    form.externalUrl = project.externalUrl
-    form.githubUrl = project.githubUrl
-    form.status = project.status
-    form.featured = project.featured
-    form.tags = project.tags.map(t => t.name)
-    originalSlug.value = project.slug
+    form.videoUrl = project.videoUrl ?? null
+    form.externalUrl = project.externalUrl ?? null
+    form.githubUrl = project.githubUrl ?? null
+    form.status = (project.status ?? 'draft') as 'draft' | 'published' | 'archived'
+    form.featured = project.featured ?? false
+    form.tags = (project.tags ?? []).map((t: Tag) => t.name)
+    originalSlug.value = project.slug ?? ''
   } catch (error) {
     console.error('Failed to load project:', error)
     router.push('/admin/projects')

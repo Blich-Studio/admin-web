@@ -29,7 +29,7 @@ watch(typeFilter, () => {
   activityStore.fetchActivities({ page: 1, type: typeFilter.value || undefined })
 })
 
-const changePage = async (page: number) => {
+const _changePage = async (page: number) => {
   currentPage.value = page
   await activityStore.fetchActivities({ page, type: typeFilter.value || undefined })
 }
@@ -262,22 +262,18 @@ const getCommentStatusClass = (status: RecentComment['status']) => {
           </div>
 
           <!-- Pagination -->
-          <div v-if="activityStore.meta && activityStore.meta.totalPages > 1" class="pagination">
+          <div v-if="(activityStore.meta?.totalPages ?? 0) > 1" class="pagination">
             <button
               class="btn btn--secondary btn--sm"
-              :disabled="!activityStore.meta.hasPrev"
-              @click="changePage(currentPage - 1)"
-            >
+              :disabled="!(activityStore.meta?.hasPrev)">
               Previous
             </button>
             <span class="pagination__info">
-              Page {{ activityStore.meta.page }} of {{ activityStore.meta.totalPages }}
+              Page {{ activityStore.meta?.page ?? 1 }} of {{ activityStore.meta?.totalPages ?? 1 }}
             </span>
             <button
               class="btn btn--secondary btn--sm"
-              :disabled="!activityStore.meta.hasNext"
-              @click="changePage(currentPage + 1)"
-            >
+              :disabled="!(activityStore.meta?.hasNext)">
               Next
             </button>
           </div>

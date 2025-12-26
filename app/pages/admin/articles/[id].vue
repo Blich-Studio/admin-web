@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useArticlesStore } from '~/stores/articles'
+import type { Tag } from '~/types/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,14 +30,14 @@ const loadArticle = async () => {
   isLoading.value = true
   try {
     const article = await articlesStore.fetchArticle(articleId.value)
-    form.title = article.title
-    form.slug = article.slug
-    form.perex = article.perex
-    form.content = article.content
-    form.coverImageUrl = article.coverImageUrl
-    form.status = article.status
-    form.tags = article.tags.map(t => t.name)
-    originalSlug.value = article.slug
+    form.title = article.title ?? ''
+    form.slug = article.slug ?? ''
+    form.perex = article.perex ?? ''
+    form.content = article.content ?? ''
+    form.coverImageUrl = article.coverImageUrl ?? null
+    form.status = (article.status ?? 'draft') as 'draft' | 'published' | 'archived'
+    form.tags = (article.tags ?? []).map((t: Tag) => t.name)
+    originalSlug.value = article.slug ?? ''
   } catch (error) {
     console.error('Failed to load article:', error)
     router.push('/admin/articles')

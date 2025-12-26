@@ -65,7 +65,8 @@ export const useArticlesStore = defineStore('articles', {
           authorId,
         })
 
-        this.articles = response.data
+        // Defensive: ensure `articles` is always an array and `meta` proper shape
+        this.articles = Array.isArray(response.data) ? response.data : []
         this.meta = response.meta ?? null
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch articles'

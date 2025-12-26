@@ -143,15 +143,15 @@ const goToPage = (page: number) => {
                 <span v-for="tag in project.tags?.slice(0, 3)" :key="tag.id" class="tag">
                   {{ tag.name }}
                 </span>
-                <span v-if="project.tags?.length > 3" class="tag">
-                  +{{ project.tags.length - 3 }}
+                <span v-if="(project.tags?.length ?? 0) > 3" class="tag">
+                  +{{ (project.tags?.length ?? 0) - 3 }}
                 </span>
               </div>
             </td>
             <td class="admin-table__meta">{{ project.viewsCount }}</td>
             <td class="admin-table__meta">{{ project.likesCount }}</td>
             <td class="admin-table__meta">
-              {{ new Date(project.createdAt).toLocaleDateString() }}
+              {{ new Date(project.createdAt ?? '').toLocaleDateString() }}
             </td>
             <td>
               <div class="admin-table__actions">

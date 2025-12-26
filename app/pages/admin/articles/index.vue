@@ -137,15 +137,15 @@ const goToPage = (page: number) => {
                 <span v-for="tag in article.tags?.slice(0, 3)" :key="tag.id" class="tag">
                   {{ tag.name }}
                 </span>
-                <span v-if="article.tags?.length > 3" class="tag">
-                  +{{ article.tags.length - 3 }}
+                <span v-if="(article.tags?.length ?? 0) > 3" class="tag">
+                  +{{ (article.tags?.length ?? 0) - 3 }}
                 </span>
               </div>
             </td>
             <td class="admin-table__meta">{{ article.viewsCount }}</td>
             <td class="admin-table__meta">{{ article.likesCount }}</td>
             <td class="admin-table__meta">
-              {{ new Date(article.createdAt).toLocaleDateString() }}
+              {{ new Date(article.createdAt ?? '').toLocaleDateString() }}
             </td>
             <td>
               <div class="admin-table__actions">

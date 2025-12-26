@@ -101,7 +101,7 @@ const confirmDelete = async () => {
             <td class="admin-table__meta">{{ tag.slug }}</td>
             <td class="admin-table__meta">{{ tag.description || '-' }}</td>
             <td class="admin-table__meta">
-              {{ new Date(tag.createdAt).toLocaleDateString() }}
+              {{ new Date(tag.createdAt ?? '').toLocaleDateString() }}
             </td>
             <td>
               <div class="admin-table__actions">

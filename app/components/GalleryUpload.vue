@@ -119,6 +119,7 @@ const moveImage = (fromIndex: number, toIndex: number) => {
   if (toIndex < 0 || toIndex >= props.modelValue.length) return
   const newUrls = [...props.modelValue]
   const [removed] = newUrls.splice(fromIndex, 1)
+  if (removed === undefined) return
   newUrls.splice(toIndex, 0, removed)
   emit('update:modelValue', newUrls)
 }

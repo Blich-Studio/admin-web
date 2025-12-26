@@ -24,8 +24,22 @@ export const useTagsStore = defineStore('tags', {
 
       try {
         const api = useApi()
-        const response = await api.get<ApiResponse<Tag[]>>('/tags')
-        this.tags = response.data
+        const response: unknown = await api.get('/tags')
+
+        // `useApi()` may unwrap the outer `{ data: ... }` for us.
+        // Support both shapes: either `Tag[]` or `{ data: Tag[] }`.
+        if (Array.isArray(response)) {
+          this.tags = response
+        } else if (
+          response &&
+          typeof response === 'object' &&
+          'data' in response &&
+          Array.isArray((response as Record<string, unknown>).data)
+        ) {
+          this.tags = (response as Record<string, unknown>).data as Tag[]
+        } else {
+          this.tags = []
+        }
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch tags'
         throw err

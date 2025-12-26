@@ -85,7 +85,7 @@ const { data: stats, pending } = useAsyncData('dashboard-stats', async () => {
                   </span>
                 </td>
                 <td class="admin-table__meta">
-                  {{ new Date(article.createdAt).toLocaleDateString() }}
+                  {{ new Date(article.createdAt ?? '').toLocaleDateString() }}
                 </td>
               </tr>
             </tbody>
