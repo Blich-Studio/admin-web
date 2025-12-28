@@ -88,34 +88,38 @@ onMounted(() => {
     <div class="admin-card" style="margin-top:1rem;">
       <h3 style="margin:0 0 1rem 0;">Files</h3>
       <div v-if="loading">Loading files...</div>
-      <table v-else class="admin-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Size</th>
-            <th>Type</th>
-            <th>Uploaded</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="f in files" :key="f.url">
-            <td>{{ f.name }}</td>
-            <td>{{ Math.round((f.size || 0) / 1024) }} KB</td>
-            <td>{{ f.contentType }}</td>
-            <td>{{ new Date(f.createdAt || '').toLocaleString() }}</td>
-            <td>
-              <button 
-                class="btn btn--sm btn--outline"
-                @click="copyUrl(f.url)"
-                :title="`Copy URL: ${f.url}`"
-              >
-                {{ copiedUrl === f.url ? '✓ Copied!' : 'Copy URL' }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-else style="overflow-x: auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Size</th>
+              <th>Type</th>
+              <th>Uploaded</th>
+              <th style="min-width: 120px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="f in files" :key="f.url">
+              <td>{{ f.name }}</td>
+              <td>{{ Math.round((f.size || 0) / 1024) }} KB</td>
+              <td>{{ f.contentType }}</td>
+              <td>{{ new Date(f.createdAt || '').toLocaleString() }}</td>
+              <td>
+                <button 
+                  style="padding: 0.5rem 1rem; font-size: 0.875rem; border: 1px solid #ccc; border-radius: 4px; background: transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                  @click="copyUrl(f.url)"
+                  @mouseenter="(e) => (e.target as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.05)'"
+                  @mouseleave="(e) => (e.target as HTMLElement).style.backgroundColor = 'transparent'"
+                  :title="`Copy URL: ${f.url}`"
+                >
+                  {{ copiedUrl === f.url ? '✓ Copied!' : 'Copy URL' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>

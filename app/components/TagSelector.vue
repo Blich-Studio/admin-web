@@ -154,3 +154,108 @@ const handleKeydown = (event: KeyboardEvent) => {
     </div>
   </div>
 </template>
+<style scoped>
+.tag-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tag-selector__input-wrapper {
+  position: relative;
+}
+
+.tag-selector__input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.tag-selector__input:focus {
+  outline: none;
+  border-color: var(--clay-orange);
+  box-shadow: 0 0 0 3px rgba(255, 140, 60, 0.1);
+}
+
+.tag-selector__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.tag-selector__option {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.tag-selector__option:last-child {
+  border-bottom: none;
+}
+
+.tag-selector__option:hover {
+  background-color: color-mix(in srgb, var(--clay-orange) 10%, transparent);
+}
+
+.tag-selector__option--create {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--clay-orange);
+  font-weight: 500;
+}
+
+.tag-selector__selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-selector__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background-color: color-mix(in srgb, var(--clay-orange) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--clay-orange) 30%, transparent);
+  color: var(--clay-orange);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.tag-selector__tag-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background-color 0.2s;
+}
+
+.tag-selector__tag-remove:hover {
+  background-color: color-mix(in srgb, var(--clay-orange) 30%, transparent);
+}
+</style>
