@@ -10,6 +10,7 @@ const files = ref<FileMetadata[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const isUploading = ref(false)
+const copiedUrl = ref<string | null>(null)
 
 async function fetchFiles() {
   loading.value = true
@@ -49,6 +50,18 @@ async function uploadFile(file: File) {
   }
 }
 
+async function copyUrl(url: string) {
+  try {
+    await navigator.clipboard.writeText(url)
+    copiedUrl.value = url
+    setTimeout(() => {
+      copiedUrl.value = null
+    }, 2000)
+  } catch {
+    error.value = 'Failed to copy URL'
+  }
+}
+
 onMounted(() => {
   fetchFiles()
 })
@@ -82,6 +95,7 @@ onMounted(() => {
             <th>Size</th>
             <th>Type</th>
             <th>Uploaded</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -90,6 +104,15 @@ onMounted(() => {
             <td>{{ Math.round((f.size || 0) / 1024) }} KB</td>
             <td>{{ f.contentType }}</td>
             <td>{{ new Date(f.createdAt || '').toLocaleString() }}</td>
+            <td>
+              <button 
+                class="btn btn--sm btn--outline"
+                @click="copyUrl(f.url)"
+                :title="`Copy URL: ${f.url}`"
+              >
+                {{ copiedUrl === f.url ? '✓ Copied!' : 'Copy URL' }}
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
