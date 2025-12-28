@@ -16,6 +16,7 @@ const form = reactive({
   content: '',
   coverImageUrl: null as string | null,
   status: 'draft' as 'draft' | 'published' | 'archived',
+  featured: false,
   tags: [] as string[],
 })
 
@@ -36,6 +37,7 @@ const loadArticle = async () => {
     form.content = article.content ?? ''
     form.coverImageUrl = article.coverImageUrl ?? null
     form.status = (article.status ?? 'draft') as 'draft' | 'published' | 'archived'
+    form.featured = article.featured ?? false
     form.tags = (article.tags ?? []).map((t: Tag) => t.name)
     originalSlug.value = article.slug ?? ''
   } catch (error) {
@@ -268,6 +270,23 @@ const deleteArticle = async () => {
                 <option value="published">Published</option>
                 <option value="archived">Archived</option>
               </select>
+            </div>
+          </div>
+
+          <!-- Featured -->
+          <div class="admin-card">
+            <div class="admin-card__header">
+              <h3>Featured</h3>
+            </div>
+            <div class="admin-card__body">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input
+                  v-model="form.featured"
+                  type="checkbox"
+                  style="cursor: pointer; width: 18px; height: 18px;"
+                >
+                <span>Show in "From the Studio" section</span>
+              </label>
             </div>
           </div>
 
