@@ -44,12 +44,6 @@ Create or update `.env` with the following variables:
 NUXT_PUBLIC_API_URL=http://localhost:3000/api/_proxy
 ```
 
-For production, set:
-
-```env
-NUXT_PUBLIC_API_URL=https://api.blichstudio.com
-```
-
 ### Development Server
 
 Start the development server on `http://localhost:3000`:
