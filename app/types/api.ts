@@ -45,6 +45,7 @@ export interface ArticleListItem {
   coverImageUrl?: string | null
   author?: Author
   status?: 'draft' | 'published' | 'archived'
+  featured?: boolean
   tags: Tag[]
   likesCount?: number
   viewsCount?: number
@@ -65,6 +66,7 @@ export interface CreateArticleDto {
   content?: string
   coverImageUrl?: string | null
   status?: 'draft' | 'published' | 'archived'
+  featured?: boolean
   tags?: string[]
 }
 
