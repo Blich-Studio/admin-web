@@ -233,7 +233,7 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
   background: $admin-card-bg;
   border-radius: 0.75rem;
   border: 1px solid $admin-border;
-  overflow: hidden;
+  overflow: visible;
 
   &__header {
     padding: 1.25rem 1.5rem;
@@ -251,6 +251,9 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
 
   &__body {
     padding: 1.5rem;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
   }
 
   &__footer {
