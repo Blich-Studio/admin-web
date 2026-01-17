@@ -77,9 +77,7 @@ export function useApi() {
       return undefined as T
     }
 
-    // API responses are wrapped in { data: ... }, unwrap them
-    const json = await response.json()
-    return json.data !== undefined ? json.data : json
+    return await response.json()
   }
 
   return {

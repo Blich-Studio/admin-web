@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Tag, ApiResponse } from '~/types/api'
+import type { Tag } from '~/types/api'
 
 interface TagsState {
   tags: Tag[]
@@ -57,9 +57,9 @@ export const useTagsStore = defineStore('tags', {
 
       try {
         const api = useApi()
-        const response = await api.post<ApiResponse<Tag>>('/tags', { name, description })
-        this.tags.push(response.data)
-        return response.data
+        const tag = await api.post<Tag>('/tags', { name, description })
+        this.tags.push(tag)
+        return tag
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to create tag'
         throw err
