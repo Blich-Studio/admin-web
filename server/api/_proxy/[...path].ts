@@ -15,13 +15,24 @@ export default defineEventHandler(async (event) => {
 
   // Forward incoming cookies to the gateway (SSR requests)
   const cookie = headers.cookie
+  const contentType = headers['content-type'] || ''
 
   // Forward body for non-GET/HEAD
-  const body = method === 'GET' || method === 'HEAD' ? undefined : await readBody(event)
+  // For multipart/form-data, read raw body to preserve binary data
+  let body: BodyInit | Record<string, unknown> | null | undefined
+  if (method !== 'GET' && method !== 'HEAD') {
+    if (contentType.includes('multipart/form-data')) {
+      // Read raw body for file uploads - do not parse
+      body = await readRawBody(event, false) ?? undefined
+    } else {
+      body = await readBody(event)
+    }
+  }
 
   // Debug logging
   console.log(`[Proxy] ${method} ${targetUrl}`)
   console.log(`[Proxy] Auth header present: ${!!headers.authorization}`)
+  console.log(`[Proxy] Content-Type: ${contentType}`)
 
   try {
     const res = await $fetch.raw(targetUrl, {
@@ -33,7 +44,7 @@ export default defineEventHandler(async (event) => {
         ...(cookie ? { cookie } : {}),
         // Optional: forward user-agent for logging/debug
         ...(headers['user-agent'] ? { 'user-agent': headers['user-agent'] } : {}),
-        // Preserve content-type if present
+        // Preserve content-type if present (critical for multipart boundary)
         ...(headers['content-type'] ? { 'content-type': headers['content-type'] } : {}),
         // Forward authorization if present
         ...(headers.authorization ? { authorization: headers.authorization } : {}),

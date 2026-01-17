@@ -110,8 +110,7 @@ export const useActivityStore = defineStore('activity', {
     async fetchStats() {
       try {
         const api = useApi()
-        const response = await api.get<{ data: ActivityStats }>('/activity/stats')
-        this.stats = response.data
+        this.stats = await api.get<ActivityStats>('/activity/stats')
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch stats'
         throw err
@@ -124,8 +123,7 @@ export const useActivityStore = defineStore('activity', {
     async fetchRecentComments(limit: number = 10) {
       try {
         const api = useApi()
-        const response = await api.get<{ data: RecentComment[] }>('/activity/comments', { limit })
-        this.recentComments = response.data
+        this.recentComments = await api.get<RecentComment[]>('/activity/comments', { limit })
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch comments'
         throw err

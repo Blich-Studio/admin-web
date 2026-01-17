@@ -1,0 +1,15 @@
+# Development Dockerfile with hot reload
+FROM oven/bun:1
+
+WORKDIR /app
+
+# Install build dependencies for native modules (better-sqlite3)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Expose port
+EXPOSE 3000
+
+# Install deps and start dev server at runtime (source is volume-mounted)
+CMD ["sh", "-c", "bun install --frozen-lockfile --verbose && bun run dev"]

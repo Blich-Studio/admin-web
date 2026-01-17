@@ -27,9 +27,6 @@ interface LoginResponse {
   }
 }
 
-interface ApiResponse<T> {
-  data: T
-}
 
 /**
  * Decode JWT payload without verification (verification is done server-side).
@@ -80,20 +77,11 @@ export const useAuthStore = defineStore('auth', {
           throw new Error(errorData.message || 'Invalid credentials')
         }
 
-        const rawText = await response.text()
-        console.log('Raw API response:', rawText)
-        
-        const apiResponse: ApiResponse<LoginResponse> = JSON.parse(rawText)
-        const data = apiResponse.data // Unwrap the data property
-        console.log('Parsed data:', data)
-        console.log('access_token value:', data.access_token)
+        const data: LoginResponse = await response.json()
 
         // Extract role from the signed JWT token (not from untrusted response body)
         const payload = decodeJwtPayload(data.access_token)
-        console.log('Decoded JWT payload:', payload)
-        
         if (!payload) {
-          console.error('Failed to decode token:', data.access_token)
           throw new Error('Invalid token received from server')
         }
 
