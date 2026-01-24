@@ -65,18 +65,31 @@ const handleSlugInput = () => {
 const validate = (): boolean => {
   errors.value = {}
 
-  if (!form.title.trim()) {
+  const title = form.title.trim()
+  const slug = form.slug?.trim() ?? ''
+  const description = form.description.trim()
+  const shortDescription = form.shortDescription?.trim() ?? ''
+
+  if (!title) {
     errors.value.title = 'Title is required'
+  } else if (title.length > 200) {
+    errors.value.title = 'Title must be less than 200 characters'
   }
 
-  if (!form.slug?.trim()) {
+  if (!slug) {
     errors.value.slug = 'Slug is required'
-  } else if (!/^[a-z0-9-]+$/.test(form.slug)) {
+  } else if (slug.length > 100) {
+    errors.value.slug = 'Slug must be less than 100 characters'
+  } else if (!/^[a-z0-9-]+$/.test(slug)) {
     errors.value.slug = 'Slug can only contain lowercase letters, numbers, and hyphens'
   }
 
-  if (!form.description.trim()) {
+  if (!description) {
     errors.value.description = 'Description is required'
+  }
+
+  if (shortDescription && shortDescription.length > 500) {
+    errors.value.shortDescription = 'Short description must be less than 500 characters'
   }
 
   // Validate URLs if provided
@@ -85,7 +98,7 @@ const validate = (): boolean => {
     const value = form[field]
     if (value && value.trim()) {
       try {
-        new URL(value)
+        new URL(value.trim())
       } catch {
         errors.value[field] = 'Must be a valid URL'
       }
@@ -210,6 +223,7 @@ const saveProject = async (publish = false) => {
                 placeholder="Brief summary for listings (optional)..."
                 rows="2"
               />
+              <p v-if="errors.shortDescription" class="form-group__error">{{ errors.shortDescription }}</p>
             </div>
           </div>
         </div>
