@@ -72,10 +72,13 @@ export interface CreateArticleDto {
 
 export type UpdateArticleDto = Partial<CreateArticleDto>
 
+export type ProjectType = 'game' | 'engine' | 'tool' | 'animation' | 'artwork' | 'other'
+
 export interface ProjectListItem {
   id: string
   title: string
   slug: string
+  type?: ProjectType
   shortDescription?: string | null
   coverImageUrl?: string | null
   author?: Author
@@ -92,22 +95,25 @@ export interface ProjectListItem {
 export interface Project extends ProjectListItem {
   description?: string
   galleryUrls?: string[]
-  videoUrl?: string | null
-  externalUrl?: string | null
   githubUrl?: string | null
+  itchioUrl?: string | null
+  steamUrl?: string | null
+  youtubeUrl?: string | null
   isLiked?: boolean
 }
 
 export interface CreateProjectDto {
   title: string
   slug?: string
+  type?: ProjectType
   description?: string
   shortDescription?: string | null
   coverImageUrl?: string | null
   galleryUrls?: string[]
-  videoUrl?: string | null
-  externalUrl?: string | null
   githubUrl?: string | null
+  itchioUrl?: string | null
+  steamUrl?: string | null
+  youtubeUrl?: string | null
   status?: 'draft' | 'published' | 'archived'
   featured?: boolean
   tags?: string[]
