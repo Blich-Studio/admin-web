@@ -9,17 +9,28 @@ const projectsStore = useProjectsStore()
 const form = reactive({
   title: '',
   slug: '',
+  type: 'other' as 'game' | 'engine' | 'tool' | 'animation' | 'artwork' | 'other',
   shortDescription: '' as string | null,
   description: '',
   coverImageUrl: null as string | null,
   galleryUrls: [] as string[],
-  videoUrl: null as string | null,
-  externalUrl: null as string | null,
   githubUrl: null as string | null,
+  itchioUrl: null as string | null,
+  steamUrl: null as string | null,
+  youtubeUrl: null as string | null,
   status: 'draft' as 'draft' | 'published' | 'archived',
   featured: false,
   tags: [] as string[],
 })
+
+const projectTypes = [
+  { value: 'game', label: 'Game' },
+  { value: 'engine', label: 'Engine' },
+  { value: 'tool', label: 'Tool' },
+  { value: 'animation', label: 'Animation' },
+  { value: 'artwork', label: 'Artwork' },
+  { value: 'other', label: 'Other' },
+]
 
 const errors = ref<Record<string, string>>({})
 const isSaving = ref(false)
@@ -69,7 +80,7 @@ const validate = (): boolean => {
   }
 
   // Validate URLs if provided
-  const urlFields = ['videoUrl', 'externalUrl', 'githubUrl'] as const
+  const urlFields = ['githubUrl', 'itchioUrl', 'steamUrl', 'youtubeUrl'] as const
   for (const field of urlFields) {
     const value = form[field]
     if (value && value.trim()) {
@@ -166,7 +177,7 @@ const saveProject = async (publish = false) => {
         <div class="admin-card">
           <div class="admin-card__body">
             <div class="form-group">
-              <label class="form-group__label">Title</label>
+              <label class="form-group__label">Title <span class="required">*</span></label>
               <input
                 v-model="form.title"
                 type="text"
@@ -178,7 +189,7 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">Slug</label>
+              <label class="form-group__label">Slug <span class="required">*</span></label>
               <input
                 v-model="form.slug"
                 type="text"
@@ -206,7 +217,7 @@ const saveProject = async (publish = false) => {
         <!-- Full Description -->
         <div class="admin-card">
           <div class="admin-card__header">
-            <h3>Full Description</h3>
+            <h3>Full Description <span class="required">*</span></h3>
           </div>
           <div class="admin-card__body" style="padding: 0;">
             <MarkdownEditor
@@ -227,22 +238,7 @@ const saveProject = async (publish = false) => {
           <div class="admin-card__body">
             <div class="form-group">
               <label class="form-group__label">
-                <Icon name="lucide:external-link" />
-                External URL
-              </label>
-              <input
-                v-model="form.externalUrl"
-                type="url"
-                class="form-input"
-                :class="{ 'form-input--error': errors.externalUrl }"
-                placeholder="https://example.com/project"
-              >
-              <p v-if="errors.externalUrl" class="form-group__error">{{ errors.externalUrl }}</p>
-            </div>
-
-            <div class="form-group">
-              <label class="form-group__label">
-                <Icon name="lucide:github" />
+                <Icon name="simple-icons:github" />
                 GitHub URL
               </label>
               <input
@@ -255,19 +251,49 @@ const saveProject = async (publish = false) => {
               <p v-if="errors.githubUrl" class="form-group__error">{{ errors.githubUrl }}</p>
             </div>
 
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group">
               <label class="form-group__label">
-                <Icon name="lucide:youtube" />
-                Video URL
+                <Icon name="simple-icons:itchdotio" />
+                itch.io URL
               </label>
               <input
-                v-model="form.videoUrl"
+                v-model="form.itchioUrl"
                 type="url"
                 class="form-input"
-                :class="{ 'form-input--error': errors.videoUrl }"
+                :class="{ 'form-input--error': errors.itchioUrl }"
+                placeholder="https://username.itch.io/game"
+              >
+              <p v-if="errors.itchioUrl" class="form-group__error">{{ errors.itchioUrl }}</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-group__label">
+                <Icon name="simple-icons:steam" />
+                Steam URL
+              </label>
+              <input
+                v-model="form.steamUrl"
+                type="url"
+                class="form-input"
+                :class="{ 'form-input--error': errors.steamUrl }"
+                placeholder="https://store.steampowered.com/app/..."
+              >
+              <p v-if="errors.steamUrl" class="form-group__error">{{ errors.steamUrl }}</p>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-group__label">
+                <Icon name="simple-icons:youtube" />
+                YouTube URL
+              </label>
+              <input
+                v-model="form.youtubeUrl"
+                type="url"
+                class="form-input"
+                :class="{ 'form-input--error': errors.youtubeUrl }"
                 placeholder="https://youtube.com/watch?v=..."
               >
-              <p v-if="errors.videoUrl" class="form-group__error">{{ errors.videoUrl }}</p>
+              <p v-if="errors.youtubeUrl" class="form-group__error">{{ errors.youtubeUrl }}</p>
             </div>
           </div>
         </div>
@@ -275,6 +301,20 @@ const saveProject = async (publish = false) => {
 
       <!-- Sidebar -->
       <div class="article-editor__sidebar">
+        <!-- Type -->
+        <div class="admin-card">
+          <div class="admin-card__header">
+            <h3>Project Type</h3>
+          </div>
+          <div class="admin-card__body">
+            <select v-model="form.type" class="form-select">
+              <option v-for="t in projectTypes" :key="t.value" :value="t.value">
+                {{ t.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
         <!-- Status & Featured -->
         <div class="admin-card">
           <div class="admin-card__header">
@@ -342,5 +382,10 @@ const saveProject = async (publish = false) => {
   width: 18px;
   height: 18px;
   cursor: pointer;
+}
+
+.required {
+  color: #ef4444;
+  font-weight: 500;
 }
 </style>
