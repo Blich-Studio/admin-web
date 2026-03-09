@@ -20,7 +20,7 @@ data "terraform_remote_state" "shared" {
 }
 
 module "admin_web" {
-  source = "../../terraform-modules/modules/cloud-run"
+  source = "../terraform-modules/modules/cloud-run"
 
   service_name    = "blich-cms"
   environment     = data.terraform_remote_state.shared.outputs.environment
