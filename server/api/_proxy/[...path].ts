@@ -22,11 +22,15 @@ async function refreshAccessToken(
   gatewayBaseUrl: string,
   refreshToken: string
 ): Promise<{ accessToken: string | null; newRefreshToken?: string }> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+
   try {
     const response = await $fetch.raw(`${gatewayBaseUrl}/auth/refresh`, {
       method: 'POST',
       body: { refreshToken },
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
     })
 
     const data = response._data as any
@@ -36,8 +40,14 @@ async function refreshAccessToken(
     console.log('[CMS Proxy] Token refresh successful')
     return { accessToken, newRefreshToken }
   } catch (error: any) {
-    console.error('[CMS Proxy] Token refresh failed:', error?.statusCode || error?.message)
+    if (error?.name === 'AbortError' || error?.cause?.name === 'AbortError') {
+      console.error('[CMS Proxy] Token refresh timed out after 5s')
+    } else {
+      console.error('[CMS Proxy] Token refresh failed:', error?.statusCode || error?.message)
+    }
     return { accessToken: null }
+  } finally {
+    clearTimeout(timeout)
   }
 }
 
