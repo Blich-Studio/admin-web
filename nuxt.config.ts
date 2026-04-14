@@ -5,11 +5,20 @@ export default defineNuxtConfig({
   app: {
     head: {
     title: 'Blich CMS',
+    link: [
+      { rel: 'apple-touch-icon', href: '/apple-icon.png' },
+    ],
     meta: [
       { name: 'X-Content-Type-Options', content: 'nosniff' },
         { name: 'X-Frame-Options', content: 'DENY' },
         { name: 'X-XSS-Protection', content: '1; mode=block' },
-        { name: 'referrer', content: 'strict-origin-when-cross-origin' }
+        { name: 'referrer', content: 'strict-origin-when-cross-origin' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:title', content: 'Blich CMS' },
+        { property: 'og:description', content: 'Blich Studio Content Management System' },
+        { property: 'og:image', content: 'https://admin.blichstudio.com/og-image.png' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
     ]
   },
   },
