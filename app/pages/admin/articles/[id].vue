@@ -18,6 +18,7 @@ const form = reactive({
   status: 'draft' as 'draft' | 'published' | 'archived',
   featured: false,
   tags: [] as string[],
+  projectId: null as string | null,
 })
 
 const errors = ref<Record<string, string>>({})
@@ -39,6 +40,7 @@ const loadArticle = async () => {
     form.status = (article.status ?? 'draft') as 'draft' | 'published' | 'archived'
     form.featured = article.featured ?? false
     form.tags = (article.tags ?? []).map((t: Tag) => t.name)
+    form.projectId = article.projectId ?? null
     originalSlug.value = article.slug ?? ''
   } catch (error) {
     console.error('Failed to load article:', error)
@@ -307,6 +309,16 @@ const deleteArticle = async () => {
             </div>
             <div class="admin-card__body">
               <TagSelector v-model="form.tags" />
+            </div>
+          </div>
+
+          <!-- Linked Project -->
+          <div class="admin-card">
+            <div class="admin-card__header">
+              <h3>Linked Project</h3>
+            </div>
+            <div class="admin-card__body">
+              <ProjectSelector v-model="form.projectId" />
             </div>
           </div>
         </div>

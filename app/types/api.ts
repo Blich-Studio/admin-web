@@ -49,6 +49,7 @@ export interface ArticleListItem {
   tags: Tag[]
   likesCount?: number
   viewsCount?: number
+  projectId?: string | null
   publishedAt?: string | null
   createdAt: string
   updatedAt?: string
@@ -68,6 +69,7 @@ export interface CreateArticleDto {
   status?: 'draft' | 'published' | 'archived'
   featured?: boolean
   tags?: string[]
+  projectId?: string | null
 }
 
 export type UpdateArticleDto = Partial<CreateArticleDto>
