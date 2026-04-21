@@ -14,6 +14,7 @@ const form = reactive({
   coverImageUrl: null as string | null,
   status: 'draft' as 'draft' | 'published' | 'archived',
   tags: [] as string[],
+  projectId: null as string | null,
 })
 
 const errors = ref<Record<string, string>>({})
@@ -241,6 +242,16 @@ const saveArticle = async (publish = false) => {
           </div>
           <div class="admin-card__body">
             <TagSelector v-model="form.tags" />
+          </div>
+        </div>
+
+        <!-- Linked Project -->
+        <div class="admin-card">
+          <div class="admin-card__header">
+            <h3>Linked Project</h3>
+          </div>
+          <div class="admin-card__body">
+            <ProjectSelector v-model="form.projectId" />
           </div>
         </div>
       </div>
