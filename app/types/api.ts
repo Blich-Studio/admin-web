@@ -75,12 +75,42 @@ export interface CreateArticleDto {
 export type UpdateArticleDto = Partial<CreateArticleDto>
 
 export type ProjectType = 'game' | 'engine' | 'tool' | 'animation' | 'artwork' | 'other'
+export type ProjectChannel = 'sound' | 'motion' | 'play'
+export type ProjectPlatform =
+  | 'soundcloud'
+  | 'youtube'
+  | 'dailymotion'
+  | 'vimeo'
+  | 'peertube'
+  | 'itchio'
+  | 'steam'
+  | 'internet_archive'
+  | 'github'
+  | 'codeberg'
+  | 'other'
+export type ProjectLicense =
+  | 'cc0-1.0'
+  | 'cc-by-4.0'
+  | 'cc-by-sa-4.0'
+  | 'cc-by-nc-4.0'
+  | 'cc-by-nc-sa-4.0'
+  | 'mit'
+  | 'apache-2.0'
+  | 'gpl-3.0'
+  | 'proprietary'
+  | 'other'
 
 export interface ProjectListItem {
   id: string
   title: string
   slug: string
   type?: ProjectType
+  channel?: ProjectChannel | null
+  platform?: ProjectPlatform | null
+  externalUrl?: string | null
+  embedUrl?: string | null
+  license?: ProjectLicense | null
+  archiveUrl?: string | null
   shortDescription?: string | null
   coverImageUrl?: string | null
   author?: Author
@@ -108,6 +138,12 @@ export interface CreateProjectDto {
   title: string
   slug?: string
   type?: ProjectType
+  channel?: ProjectChannel | null
+  platform?: ProjectPlatform | null
+  externalUrl?: string | null
+  embedUrl?: string | null
+  license?: ProjectLicense | null
+  archiveUrl?: string | null
   description?: string
   shortDescription?: string | null
   coverImageUrl?: string | null
@@ -122,4 +158,3 @@ export interface CreateProjectDto {
 }
 
 export type UpdateProjectDto = Partial<CreateProjectDto>
-
