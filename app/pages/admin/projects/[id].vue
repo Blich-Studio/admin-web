@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useProjectsStore } from '~/stores/projects'
-import type { Tag } from '~/types/api'
+import type { ProjectChannel, ProjectLicense, ProjectPlatform, Tag } from '~/types/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +17,12 @@ const form = reactive({
   description: '',
   coverImageUrl: null as string | null,
   galleryUrls: [] as string[],
+  channel: null as ProjectChannel | null,
+  platform: null as ProjectPlatform | null,
+  externalUrl: null as string | null,
+  embedUrl: null as string | null,
+  license: null as ProjectLicense | null,
+  archiveUrl: null as string | null,
   githubUrl: null as string | null,
   itchioUrl: null as string | null,
   steamUrl: null as string | null,
@@ -32,6 +38,39 @@ const projectTypes = [
   { value: 'tool', label: 'Tool' },
   { value: 'animation', label: 'Animation' },
   { value: 'artwork', label: 'Artwork' },
+  { value: 'other', label: 'Other' },
+]
+
+const projectChannels: { value: ProjectChannel; label: string }[] = [
+  { value: 'sound', label: 'Sound' },
+  { value: 'motion', label: 'Motion' },
+  { value: 'play', label: 'Play' },
+]
+
+const projectPlatforms: { value: ProjectPlatform; label: string }[] = [
+  { value: 'soundcloud', label: 'SoundCloud' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'dailymotion', label: 'Dailymotion' },
+  { value: 'vimeo', label: 'Vimeo' },
+  { value: 'peertube', label: 'PeerTube' },
+  { value: 'itchio', label: 'itch.io' },
+  { value: 'steam', label: 'Steam' },
+  { value: 'internet_archive', label: 'Internet Archive' },
+  { value: 'github', label: 'GitHub' },
+  { value: 'codeberg', label: 'Codeberg' },
+  { value: 'other', label: 'Other' },
+]
+
+const projectLicenses: { value: ProjectLicense; label: string }[] = [
+  { value: 'cc0-1.0', label: 'CC0 1.0' },
+  { value: 'cc-by-4.0', label: 'CC BY 4.0' },
+  { value: 'cc-by-sa-4.0', label: 'CC BY-SA 4.0' },
+  { value: 'cc-by-nc-4.0', label: 'CC BY-NC 4.0' },
+  { value: 'cc-by-nc-sa-4.0', label: 'CC BY-NC-SA 4.0' },
+  { value: 'mit', label: 'MIT' },
+  { value: 'apache-2.0', label: 'Apache 2.0' },
+  { value: 'gpl-3.0', label: 'GPL 3.0' },
+  { value: 'proprietary', label: 'All rights reserved' },
   { value: 'other', label: 'Other' },
 ]
 
@@ -53,6 +92,12 @@ const loadProject = async () => {
     form.description = project.description ?? ''
     form.coverImageUrl = project.coverImageUrl ?? null
     form.galleryUrls = project.galleryUrls ?? []
+    form.channel = project.channel ?? null
+    form.platform = project.platform ?? null
+    form.externalUrl = project.externalUrl ?? null
+    form.embedUrl = project.embedUrl ?? null
+    form.license = project.license ?? null
+    form.archiveUrl = project.archiveUrl ?? null
     form.githubUrl = project.githubUrl ?? null
     form.itchioUrl = project.itchioUrl ?? null
     form.steamUrl = project.steamUrl ?? null
@@ -103,7 +148,15 @@ const validate = (): boolean => {
   }
 
   // Validate URLs if provided
-  const urlFields = ['githubUrl', 'itchioUrl', 'steamUrl', 'youtubeUrl'] as const
+  const urlFields = [
+    'externalUrl',
+    'embedUrl',
+    'archiveUrl',
+    'githubUrl',
+    'itchioUrl',
+    'steamUrl',
+    'youtubeUrl',
+  ] as const
   for (const field of urlFields) {
     const value = form[field]
     if (value && value.trim()) {
@@ -291,9 +344,84 @@ const deleteProject = async () => {
           <!-- Links -->
           <div class="admin-card">
             <div class="admin-card__header">
-              <h3>Links</h3>
+              <h3>Channel & Links</h3>
             </div>
             <div class="admin-card__body">
+              <div class="form-group">
+                <label class="form-group__label">Public Channel</label>
+                <select v-model="form.channel" class="form-select">
+                  <option :value="null">Archive only</option>
+                  <option v-for="channel in projectChannels" :key="channel.value" :value="channel.value">
+                    {{ channel.label }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-group__label">Primary Platform</label>
+                <select v-model="form.platform" class="form-select">
+                  <option :value="null">Not set</option>
+                  <option v-for="platform in projectPlatforms" :key="platform.value" :value="platform.value">
+                    {{ platform.label }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-group__label">License</label>
+                <select v-model="form.license" class="form-select">
+                  <option :value="null">Not set</option>
+                  <option v-for="license in projectLicenses" :key="license.value" :value="license.value">
+                    {{ license.label }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-group__label">
+                  <Icon name="lucide:external-link" />
+                  Primary URL
+                </label>
+                <input
+                  v-model="form.externalUrl"
+                  type="url"
+                  class="form-input"
+                  :class="{ 'form-input--error': errors.externalUrl }"
+                  placeholder="https://soundcloud.com/... or https://itch.io/..."
+                >
+                <p v-if="errors.externalUrl" class="form-group__error">{{ errors.externalUrl }}</p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-group__label">
+                  <Icon name="lucide:code-2" />
+                  Embed URL
+                </label>
+                <input
+                  v-model="form.embedUrl"
+                  type="url"
+                  class="form-input"
+                  :class="{ 'form-input--error': errors.embedUrl }"
+                  placeholder="https://w.soundcloud.com/player/... or video embed URL"
+                >
+                <p v-if="errors.embedUrl" class="form-group__error">{{ errors.embedUrl }}</p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-group__label">
+                  <Icon name="lucide:archive" />
+                  Archive Mirror URL
+                </label>
+                <input
+                  v-model="form.archiveUrl"
+                  type="url"
+                  class="form-input"
+                  :class="{ 'form-input--error': errors.archiveUrl }"
+                  placeholder="https://archive.org/details/..."
+                >
+                <p v-if="errors.archiveUrl" class="form-group__error">{{ errors.archiveUrl }}</p>
+              </div>
+
               <div class="form-group">
                 <label class="form-group__label">
                   <Icon name="simple-icons:github" />
