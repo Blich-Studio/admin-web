@@ -12,28 +12,6 @@ interface ApiError {
   statusCode: number
 }
 
-// Request queue for handling concurrent 401s
-let isRefreshing = false
-let refreshPromise: Promise<boolean> | null = null
-const pendingRequests: Array<{
-  resolve: (value: boolean) => void
-  reject: (error: Error) => void
-}> = []
-
-/**
- * Process pending requests after token refresh
- */
-function processPendingRequests(success: boolean, error?: Error) {
-  pendingRequests.forEach(({ resolve, reject }) => {
-    if (success) {
-      resolve(true)
-    } else {
-      reject(error || new Error('Token refresh failed'))
-    }
-  })
-  pendingRequests.length = 0
-}
-
 /**
  * Composable for making authenticated API requests to the backend
  * Uses the Nuxt server proxy which handles:
@@ -65,12 +43,7 @@ export function useApi() {
       }
     }
 
-    // Build headers - the proxy handles auth via cookies,
-    // but we also send the token in header as backup
     const headers: Record<string, string> = {}
-    if (!skipAuth && authStore.token) {
-      headers.Authorization = `Bearer ${authStore.token}`
-    }
 
     // Set content type for JSON bodies (not for FormData)
     if (body && !(body instanceof FormData)) {
@@ -86,52 +59,7 @@ export function useApi() {
       })
     }
 
-    let response = await executeRequest()
-
-    // Handle 401 - the proxy should have already tried to refresh,
-    // but we handle it client-side as well for resilience
-    if (response.status === 401 && !skipAuth && authStore.refreshToken) {
-      // Use request queue to prevent multiple simultaneous refreshes
-      if (!isRefreshing) {
-        isRefreshing = true
-        refreshPromise = authStore.refreshAccessToken()
-
-        try {
-          const refreshed = await refreshPromise
-          processPendingRequests(refreshed)
-
-          if (refreshed) {
-            // Update auth header with new token
-            if (authStore.token) {
-              headers.Authorization = `Bearer ${authStore.token}`
-            }
-            // Retry the request
-            response = await executeRequest()
-          }
-        } catch (error) {
-          processPendingRequests(false, error as Error)
-        } finally {
-          isRefreshing = false
-          refreshPromise = null
-        }
-      } else {
-        // Another request is already refreshing - wait for it
-        try {
-          await new Promise<boolean>((resolve, reject) => {
-            pendingRequests.push({ resolve, reject })
-          })
-
-          // Update auth header with new token
-          if (authStore.token) {
-            headers.Authorization = `Bearer ${authStore.token}`
-          }
-          // Retry the request
-          response = await executeRequest()
-        } catch {
-          // Refresh failed - proceed with 401 response
-        }
-      }
-    }
+    const response = await executeRequest()
 
     // If still 401 after refresh attempt, logout and redirect
     if (response.status === 401 && !skipAuth) {

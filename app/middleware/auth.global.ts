@@ -1,15 +1,13 @@
 import { useAuthStore } from '../stores/auth'
 
-// Track if auth has been restored
-let authRestored = false
-
 export default defineNuxtRouteMiddleware(async (to) => {
+  // CMS data is loaded on the client; API authorization protects every request.
+  if (import.meta.server) return
   const authStore = useAuthStore()
 
   // On client-side, ensure auth is restored before checking
-  if (import.meta.client && !authRestored) {
+  if (!authStore.initialized) {
     await authStore.restore()
-    authRestored = true
   }
 
   // Allow access to login page

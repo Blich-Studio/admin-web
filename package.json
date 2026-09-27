@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run"
   },
   "dependencies": {
     "@nuxt/eslint": "1.11.0",
@@ -20,12 +21,21 @@
     "marked": "^17.0.1",
     "nuxt": "^4.2.1",
     "pinia": "^3.0.4",
+    "sanitize-html": "^2.17.7",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
     "@nuxtjs/style-resources": "^1.2.2",
+    "@types/node": "24.10.1",
+    "@types/sanitize-html": "^2.16.1",
+    "@vitejs/plugin-vue": "6.0.2",
+    "@vue/test-utils": "2.4.6",
+    "happy-dom": "20.0.11",
     "sass": "^1.94.2",
-    "sass-embedded": "^1.93.3"
+    "sass-embedded": "^1.93.3",
+    "typescript": "5.9.3",
+    "vitest": "4.0.16",
+    "vue-tsc": "3.0.8"
   }
 }

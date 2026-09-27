@@ -1,7 +1,11 @@
+import process from 'node:process'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  // The private CMS restores cookie sessions before loading its client-side stores.
+  ssr: false,
   app: {
     head: {
     title: 'Blich CMS',
@@ -23,13 +27,14 @@ export default defineNuxtConfig({
   },
   },
   runtimeConfig: {
+    apiUrl: process.env.NUXT_API_URL || process.env.NUXT_PUBLIC_API_URL || '',
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL,
     },
   },
   hooks: {
     'ready': (nuxt) => {
-      const apiUrl = nuxt.options.runtimeConfig.public.apiUrl
+      const apiUrl = nuxt.options.runtimeConfig.apiUrl || nuxt.options.runtimeConfig.public.apiUrl
       if (!apiUrl) {
         throw new Error('NUXT_PUBLIC_API_URL environment variable is required. Please set it in your .env file.')
       }
