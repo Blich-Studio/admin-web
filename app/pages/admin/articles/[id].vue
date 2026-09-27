@@ -100,7 +100,9 @@ const saveArticle = async (publish = false) => {
       status: publish ? 'published' as const : form.status,
     }
 
-    await articlesStore.updateArticle(articleId.value, data)
+    const saved = await articlesStore.updateArticle(articleId.value, data)
+    form.status = saved.status ?? data.status
+    form.slug = saved.slug
     saveMessage.value = {
       type: 'success',
       text: publish ? 'Article published!' : 'Changes saved',

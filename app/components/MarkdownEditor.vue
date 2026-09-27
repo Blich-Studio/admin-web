@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { marked } from 'marked'
+import { renderMarkdown } from '~/utils/render-markdown'
 
 const props = defineProps<{
   modelValue: string
@@ -20,7 +20,7 @@ const selectedImageUrl = ref<string | null>(null)
 // Render markdown preview
 const renderedPreview = computed(() => {
   if (!props.modelValue) return ''
-  return marked(props.modelValue)
+  return renderMarkdown(props.modelValue)
 })
 
 // Insert markdown syntax at cursor position

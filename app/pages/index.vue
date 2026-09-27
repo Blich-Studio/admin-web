@@ -1,11 +1,8 @@
 <script setup lang="ts">
-// Redirect to admin dashboard or login
-const { isAuthenticated } = useAuth()
-
-if (isAuthenticated.value) {
-  navigateTo('/admin')
-} else {
-  navigateTo('/login')
+const auth = useAuthStore()
+if (import.meta.client) {
+  await auth.restore()
+  await navigateTo(auth.isAuthenticated ? '/admin' : '/login', { replace: true })
 }
 </script>
 
