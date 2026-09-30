@@ -41,7 +41,7 @@ bun install
 Create or update `.env` with the following variables:
 
 ```env
-NUXT_PUBLIC_API_URL=http://localhost:3000/api/_proxy
+NUXT_API_URL=http://localhost:3002
 ```
 
 ### Development Server
@@ -55,7 +55,7 @@ bun run dev
 The development server includes:
 - Hot module replacement (HMR)
 - Automatic reloads on file changes
-- Server-side rendering (SSR) for SEO
+- Client-side rendering for the private CMS
 - API proxy for authentication cookie handling
 
 ### Type Checking
@@ -71,13 +71,13 @@ bun run typecheck
 Run ESLint to check code style:
 
 ```bash
-bun run lint
+bunx eslint .
 ```
 
 Fix linting issues automatically:
 
 ```bash
-bun run lint:fix
+bunx eslint . --fix
 ```
 
 ## Production
@@ -94,7 +94,7 @@ The build process:
 - Compiles TypeScript
 - Bundles Vue components
 - Optimizes assets
-- Generates production-ready Docker image
+- Writes the server build to `.output` (Docker packaging is a separate step)
 
 ### Docker Build
 
@@ -211,11 +211,7 @@ Run tests with:
 bun run test
 ```
 
-Run end-to-end tests:
-
-```bash
-bun run test:e2e
-```
+Browser workflow checks use an isolated local API fixture. Never run mutation checks against production content.
 
 ## Deployment
 
@@ -223,7 +219,7 @@ bun run test:e2e
 
 The application is deployed to Cloud Run using Cloud Build:
 
-1. Push code to the `development` branch
+1. Merge a checked pull request to the `main` branch
 2. Cloud Build automatically triggers the build pipeline (see `cloudbuild.yaml`)
 3. Docker image is built and pushed to Artifact Registry
 4. Cloud Run service is updated with the new image
@@ -232,7 +228,7 @@ The application is deployed to Cloud Run using Cloud Build:
 
 In Cloud Run settings, configure:
 
-- `NUXT_PUBLIC_API_URL` — API gateway base URL (must be set at runtime for SSR)
+- `NUXT_API_URL` — server-only API gateway base URL (also required during build/type checking)
 
 ### Monitoring
 
@@ -253,7 +249,7 @@ Check deployment status in the Google Cloud Console:
 When making changes:
 
 1. Run `bun run typecheck` to ensure no TypeScript errors
-2. Run `bun run lint:fix` to fix code style issues
+2. Run `bunx eslint . --fix` to fix code style issues
 3. Test locally with `bun run dev`
 4. Commit changes with clear commit messages
 5. Push to feature branch and create a pull request
@@ -272,3 +268,11 @@ Markdown is parsed and then sanitized with an explicit `sanitize-html` allowlist
 Run `bun run test`, `bun run typecheck`, and `bun run build`. Use a local `NUXT_API_URL` (and `NUXT_PUBLIC_API_URL` for existing configurations) when verifying against test data. Never point mutation tests at production.
 
 The private CMS renders on the client (`ssr: false`) and restores identity/role from `/auth/me` before navigation. It does not store or read JWTs in localStorage. Legacy CMS auth keys are removed on restore, login, and logout. Writers/admins can enter; readers use the public site.
+
+## Publishing workflow
+
+Article and project editors show unsaved changes and the last saved visibility. Publishing updates the saved state, and a later save preserves it. The public-page link uses the last saved published slug; draft preview stays inside the Markdown editor.
+
+Save failures retain the form for retry. Creation moves straight to the new editor after success and avoids repeated creates while requests or navigation are pending. Navigation, logout, and closing the tab warn about unsaved changes. These are in-memory drafts, not autosave or offline recovery; browser crashes and concurrent edits in another tab are not covered.
+
+On phones, the CMS menu collapses and editor controls stack vertically.

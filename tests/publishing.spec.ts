@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { shallowMount, flushPromises } from '@vue/test-utils'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ArticleEditor from '../app/pages/admin/articles/[id].vue'
 import ProjectEditor from '../app/pages/admin/projects/[id].vue'
@@ -13,7 +13,7 @@ const draft = { title: 'Test game', slug: 'test-game', perex: 'Summary', content
 beforeEach(() => {
   vi.clearAllMocks()
   vi.useFakeTimers()
-  for (const [name, value] of Object.entries({ computed, onMounted, reactive, ref, useRoute: () => ({ params: { id: 'content-id' } }), useRouter: () => ({ push: vi.fn() }) })) vi.stubGlobal(name, value)
+  for (const [name, value] of Object.entries({ computed, onMounted, reactive, ref, watch, definePageMeta: vi.fn(), onBeforeRouteLeave: vi.fn(), onBeforeRouteUpdate: vi.fn(), useRoute: () => ({ params: { id: 'content-id' } }), useRouter: () => ({ push: vi.fn() }) })) vi.stubGlobal(name, value)
   stores.articles.fetchArticle.mockResolvedValue(draft)
   stores.projects.fetchProject.mockResolvedValue(draft)
   stores.articles.updateArticle.mockImplementation(async (_id, body) => ({ ...body }))
@@ -26,7 +26,7 @@ for (const [name, component, save] of [
   ['project', ProjectEditor, stores.projects.updateProject],
 ] as const) {
   describe(`${name} publishing`, () => {
-    const mount = () => shallowMount(component, { global: { stubs: ['NuxtLink', 'Icon', 'MarkdownEditor', 'ImageUpload', 'TagInput', 'TagSelector', 'ProjectSelector', 'GalleryUpload'] } })
+    const mount = () => shallowMount(component, { global: { stubs: ['NuxtLink', 'Icon', 'MarkdownEditor', 'ImageUpload', 'TagInput', 'TagSelector', 'ProjectSelector', 'GalleryUpload', 'EditorSaveStatus'] } })
     it('keeps published status when the editor saves again', async () => {
       const wrapper = mount()
       try {

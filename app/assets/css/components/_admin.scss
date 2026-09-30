@@ -140,11 +140,33 @@ $font-mono: "JetBrains Mono", "Geist Mono", monospace;
 
 // Main Content Area
 .admin-main {
+  min-width: 0;
   flex: 1;
   margin-left: $sidebar-width;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+.cms-menu-toggle { display: none; }
+@media (max-width: 800px) {
+  .admin-layout { flex-direction: column; }
+  .admin-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid $admin-border;
+    &__header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; }
+    &__nav, &__footer { display: none; }
+    &--open .admin-sidebar__nav, &--open .admin-sidebar__footer { display: block; }
+  }
+  .cms-menu-toggle { display: inline-flex; }
+  .admin-main { margin-left: 0; min-height: 0; }
+  .admin-layout .admin-content { padding: 1rem; }
+  .admin-layout .page-header { flex-wrap: wrap; gap: 1rem; }
+  .admin-layout .page-header__actions { flex-wrap: wrap; }
+  .admin-layout .article-editor { grid-template-columns: minmax(0, 1fr); }
 }
 
 // Header

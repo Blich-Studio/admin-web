@@ -103,3 +103,6 @@ a {
 code, pre {
   font-family: var(--font-mono);
 }
+
+// Preserve editor grid layout while locking native controls during a save.
+.editor-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
