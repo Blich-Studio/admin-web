@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useEditorState } from '~/composables/useEditorState'
 import { useProjectsStore } from '~/stores/projects'
 import type { ProjectChannel, ProjectLicense, ProjectPlatform, Tag } from '~/types/api'
+definePageMeta({ key: route => route.path })
 
 const route = useRoute()
 const router = useRouter()
@@ -76,13 +78,15 @@ const projectLicenses: { value: ProjectLicense; label: string }[] = [
 
 const errors = ref<Record<string, string>>({})
 const isSaving = ref(false)
+const { snapshot, isDirty, savedStatus, savedSlug, stateLabel, markLoaded, acknowledge, permitNavigation } = useEditorState(form, isSaving, true)
+const loadError = ref<string | null>(null)
 const isLoading = ref(true)
 const saveMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null)
-const originalSlug = ref('')
 
 // Load project
 const loadProject = async () => {
   isLoading.value = true
+  loadError.value = null
   try {
     const project = await projectsStore.fetchProject(projectId.value)
     form.title = project.title ?? ''
@@ -105,10 +109,9 @@ const loadProject = async () => {
     form.status = (project.status ?? 'draft') as 'draft' | 'published' | 'archived'
     form.featured = project.featured ?? false
     form.tags = (project.tags ?? []).map((t: Tag) => t.name)
-    originalSlug.value = project.slug ?? ''
+    markLoaded()
   } catch (error) {
-    console.error('Failed to load project:', error)
-    router.push('/admin/projects')
+    loadError.value = error instanceof Error ? error.message : 'Unable to load this project. Please try again.'
   } finally {
     isLoading.value = false
   }
@@ -173,29 +176,24 @@ const validate = (): boolean => {
 
 // Save project
 const saveProject = async (publish = false) => {
-  if (!validate()) return
+  if (isSaving.value || isDeleting.value || !validate()) return
 
   isSaving.value = true
   saveMessage.value = null
+  const submitted = snapshot()
 
   try {
     const data = {
-      ...form,
+      ...submitted,
       status: publish ? 'published' as const : form.status,
     }
 
     const saved = await projectsStore.updateProject(projectId.value, data)
-    form.status = saved.status ?? data.status
-    form.slug = saved.slug
+    acknowledge(submitted, { status: saved.status ?? data.status, slug: saved.slug })
     saveMessage.value = {
       type: 'success',
-      text: publish ? 'Project published!' : 'Changes saved',
+      text: isDirty.value ? 'Saved. Newer edits still need saving.' : publish ? 'Project published!' : 'Changes saved',
     }
-
-    // Clear message after delay
-    setTimeout(() => {
-      saveMessage.value = null
-    }, 3000)
   } catch (error) {
     saveMessage.value = {
       type: 'error',
@@ -211,10 +209,12 @@ const showDeleteConfirm = ref(false)
 const isDeleting = ref(false)
 
 const deleteProject = async () => {
+  if (isSaving.value || isDeleting.value) return
   isDeleting.value = true
   try {
     await projectsStore.deleteProject(projectId.value)
-    router.push('/admin/projects')
+    permitNavigation('/admin/projects')
+    await router.push('/admin/projects')
   } catch (error) {
     saveMessage.value = {
       type: 'error',
@@ -234,6 +234,9 @@ const deleteProject = async () => {
       <div class="loading-spinner__icon" />
     </div>
 
+    <div v-else-if="loadError" class="admin-card" role="alert">
+      <div class="admin-card__body"><p>{{ loadError }}</p><button class="btn btn--primary" @click="loadProject">Try again</button><NuxtLink to="/admin/projects" class="btn btn--ghost">Back to Projects</NuxtLink></div>
+    </div>
     <template v-else>
       <div class="page-header">
         <div>
@@ -247,6 +250,7 @@ const deleteProject = async () => {
           <button
             class="btn btn--ghost"
             style="color: #ef4444;"
+            :disabled="isSaving || isDeleting"
             @click="showDeleteConfirm = true"
           >
             <Icon name="lucide:trash-2" />
@@ -254,7 +258,7 @@ const deleteProject = async () => {
           </button>
           <button
             class="btn btn--secondary"
-            :disabled="isSaving"
+            :disabled="isSaving || isDeleting"
             @click="saveProject(false)"
           >
             <Icon v-if="isSaving" name="lucide:loader-2" class="icon" style="animation: spin 1s linear infinite;" />
@@ -263,7 +267,7 @@ const deleteProject = async () => {
           <button
             v-if="form.status !== 'published'"
             class="btn btn--primary"
-            :disabled="isSaving"
+            :disabled="isSaving || isDeleting"
             @click="saveProject(true)"
           >
             <Icon v-if="isSaving" name="lucide:loader-2" class="icon" style="animation: spin 1s linear infinite;" />
@@ -273,9 +277,12 @@ const deleteProject = async () => {
         </div>
       </div>
 
+      <EditorSaveStatus :label="stateLabel" :dirty="isDirty" :saved-status="savedStatus" :saved-slug="savedSlug" section="projects" />
+
       <!-- Save Message -->
       <div
         v-if="saveMessage"
+        :role="saveMessage.type === 'error' ? 'alert' : 'status'"
         :class="['toast', `toast--${saveMessage.type}`]"
         style="margin-bottom: 1rem;"
       >
@@ -283,15 +290,16 @@ const deleteProject = async () => {
         <span class="toast__message">{{ saveMessage.text }}</span>
       </div>
 
-      <div class="article-editor">
+      <fieldset class="article-editor editor-fields" aria-label="Projects editor" :disabled="isSaving || isDeleting">
         <!-- Main Content -->
         <div class="article-editor__main">
           <!-- Basic Info -->
           <div class="admin-card">
             <div class="admin-card__body">
               <div class="form-group">
-                <label class="form-group__label">Title <span class="required">*</span></label>
+                <label class="form-group__label" for="editor-title">Title <span class="required">*</span></label>
                 <input
+                  id="editor-title"
                   v-model="form.title"
                   type="text"
                   class="form-input"
@@ -302,8 +310,9 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">Slug <span class="required">*</span></label>
+                <label class="form-group__label" for="editor-slug">Slug <span class="required">*</span></label>
                 <input
+                  id="editor-slug"
                   v-model="form.slug"
                   type="text"
                   class="form-input"
@@ -315,9 +324,10 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">Short Description</label>
+                <label class="form-group__label" for="editor-shortDescription">Short Description</label>
               <textarea
-                v-model="form.shortDescription"
+                id="editor-shortDescription"
+                  v-model="form.shortDescription"
                 class="form-textarea"
                 placeholder="Brief summary for listings (optional)..."
                 rows="2"
@@ -350,8 +360,8 @@ const deleteProject = async () => {
             </div>
             <div class="admin-card__body">
               <div class="form-group">
-                <label class="form-group__label">Public Channel</label>
-                <select v-model="form.channel" class="form-select">
+                <label class="form-group__label" for="editor-channel">Public Channel</label>
+                <select id="editor-channel" v-model="form.channel" class="form-select">
                   <option :value="null">Archive only</option>
                   <option v-for="channel in projectChannels" :key="channel.value" :value="channel.value">
                     {{ channel.label }}
@@ -360,8 +370,8 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">Primary Platform</label>
-                <select v-model="form.platform" class="form-select">
+                <label class="form-group__label" for="editor-platform">Primary Platform</label>
+                <select id="editor-platform" v-model="form.platform" class="form-select">
                   <option :value="null">Not set</option>
                   <option v-for="platform in projectPlatforms" :key="platform.value" :value="platform.value">
                     {{ platform.label }}
@@ -370,8 +380,8 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">License</label>
-                <select v-model="form.license" class="form-select">
+                <label class="form-group__label" for="editor-license">License</label>
+                <select id="editor-license" v-model="form.license" class="form-select">
                   <option :value="null">Not set</option>
                   <option v-for="license in projectLicenses" :key="license.value" :value="license.value">
                     {{ license.label }}
@@ -380,11 +390,12 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">
+                <label class="form-group__label" for="editor-externalUrl">
                   <Icon name="lucide:external-link" />
                   Primary URL
                 </label>
                 <input
+                  id="editor-externalUrl"
                   v-model="form.externalUrl"
                   type="url"
                   class="form-input"
@@ -395,11 +406,12 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">
+                <label class="form-group__label" for="editor-embedUrl">
                   <Icon name="lucide:code-2" />
                   Embed URL
                 </label>
                 <input
+                  id="editor-embedUrl"
                   v-model="form.embedUrl"
                   type="url"
                   class="form-input"
@@ -410,11 +422,12 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">
+                <label class="form-group__label" for="editor-archiveUrl">
                   <Icon name="lucide:archive" />
                   Archive Mirror URL
                 </label>
                 <input
+                  id="editor-archiveUrl"
                   v-model="form.archiveUrl"
                   type="url"
                   class="form-input"
@@ -425,11 +438,12 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">
+                <label class="form-group__label" for="editor-githubUrl">
                   <Icon name="simple-icons:github" />
                   GitHub URL
                 </label>
                 <input
+                  id="editor-githubUrl"
                   v-model="form.githubUrl"
                   type="url"
                   class="form-input"
@@ -440,11 +454,12 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">
+                <label class="form-group__label" for="editor-itchioUrl">
                   <Icon name="simple-icons:itchdotio" />
                   itch.io URL
                 </label>
                 <input
+                  id="editor-itchioUrl"
                   v-model="form.itchioUrl"
                   type="url"
                   class="form-input"
@@ -455,11 +470,12 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">
+                <label class="form-group__label" for="editor-steamUrl">
                   <Icon name="simple-icons:steam" />
                   Steam URL
                 </label>
                 <input
+                  id="editor-steamUrl"
                   v-model="form.steamUrl"
                   type="url"
                   class="form-input"
@@ -470,11 +486,12 @@ const deleteProject = async () => {
               </div>
 
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-group__label">
+                <label class="form-group__label" for="editor-youtubeUrl">
                   <Icon name="simple-icons:youtube" />
                   YouTube URL
                 </label>
                 <input
+                  id="editor-youtubeUrl"
                   v-model="form.youtubeUrl"
                   type="url"
                   class="form-input"
@@ -552,7 +569,7 @@ const deleteProject = async () => {
             </div>
           </div>
         </div>
-      </div>
+      </fieldset>
 
       <!-- Delete Confirmation Modal -->
       <Teleport to="body">

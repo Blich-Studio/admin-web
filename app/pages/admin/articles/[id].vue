@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useEditorState } from '~/composables/useEditorState'
 import { useArticlesStore } from '~/stores/articles'
 import type { Tag } from '~/types/api'
+definePageMeta({ key: route => route.path })
 
 const route = useRoute()
 const router = useRouter()
@@ -23,13 +25,15 @@ const form = reactive({
 
 const errors = ref<Record<string, string>>({})
 const isSaving = ref(false)
+const { snapshot, isDirty, savedStatus, savedSlug, stateLabel, markLoaded, acknowledge, permitNavigation } = useEditorState(form, isSaving, true)
+const loadError = ref<string | null>(null)
 const isLoading = ref(true)
 const saveMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null)
-const originalSlug = ref('')
 
 // Load article
 const loadArticle = async () => {
   isLoading.value = true
+  loadError.value = null
   try {
     const article = await articlesStore.fetchArticle(articleId.value)
     form.title = article.title ?? ''
@@ -41,26 +45,15 @@ const loadArticle = async () => {
     form.featured = article.featured ?? false
     form.tags = (article.tags ?? []).map((t: Tag) => t.name)
     form.projectId = article.projectId ?? null
-    originalSlug.value = article.slug ?? ''
+    markLoaded()
   } catch (error) {
-    console.error('Failed to load article:', error)
-    router.push('/admin/articles')
+    loadError.value = error instanceof Error ? error.message : 'Unable to load this article. Please try again.'
   } finally {
     isLoading.value = false
   }
 }
 
 onMounted(loadArticle)
-
-// Auto-generate slug from title (prefixed with _ to indicate intentionally unused)
-const _generateSlug = (title: string) => {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-}
 
 // Validate form
 const validate = (): boolean => {
@@ -77,7 +70,7 @@ const validate = (): boolean => {
   }
 
   if (!form.perex?.trim()) {
-    errors.value.perex = 'Perex (excerpt) is required'
+    errors.value.perex = 'Excerpt is required'
   }
 
   if (!form.content?.trim()) {
@@ -89,29 +82,24 @@ const validate = (): boolean => {
 
 // Save article
 const saveArticle = async (publish = false) => {
-  if (!validate()) return
+  if (isSaving.value || isDeleting.value || !validate()) return
 
   isSaving.value = true
   saveMessage.value = null
+  const submitted = snapshot()
 
   try {
     const data = {
-      ...form,
+      ...submitted,
       status: publish ? 'published' as const : form.status,
     }
 
     const saved = await articlesStore.updateArticle(articleId.value, data)
-    form.status = saved.status ?? data.status
-    form.slug = saved.slug
+    acknowledge(submitted, { status: saved.status ?? data.status, slug: saved.slug })
     saveMessage.value = {
       type: 'success',
-      text: publish ? 'Article published!' : 'Changes saved',
+      text: isDirty.value ? 'Saved. Newer edits still need saving.' : publish ? 'Article published!' : 'Changes saved',
     }
-
-    // Clear message after delay
-    setTimeout(() => {
-      saveMessage.value = null
-    }, 3000)
   } catch (error) {
     saveMessage.value = {
       type: 'error',
@@ -127,10 +115,12 @@ const showDeleteConfirm = ref(false)
 const isDeleting = ref(false)
 
 const deleteArticle = async () => {
+  if (isSaving.value || isDeleting.value) return
   isDeleting.value = true
   try {
     await articlesStore.deleteArticle(articleId.value)
-    router.push('/admin/articles')
+    permitNavigation('/admin/articles')
+    await router.push('/admin/articles')
   } catch (error) {
     saveMessage.value = {
       type: 'error',
@@ -150,6 +140,9 @@ const deleteArticle = async () => {
       <div class="loading-spinner__icon" />
     </div>
 
+    <div v-else-if="loadError" class="admin-card" role="alert">
+      <div class="admin-card__body"><p>{{ loadError }}</p><button class="btn btn--primary" @click="loadArticle">Try again</button><NuxtLink to="/admin/articles" class="btn btn--ghost">Back to Articles</NuxtLink></div>
+    </div>
     <template v-else>
       <div class="page-header">
         <div>
@@ -163,6 +156,7 @@ const deleteArticle = async () => {
           <button
             class="btn btn--ghost"
             style="color: #ef4444;"
+            :disabled="isSaving || isDeleting"
             @click="showDeleteConfirm = true"
           >
             <Icon name="lucide:trash-2" />
@@ -170,7 +164,7 @@ const deleteArticle = async () => {
           </button>
           <button
             class="btn btn--secondary"
-            :disabled="isSaving"
+            :disabled="isSaving || isDeleting"
             @click="saveArticle(false)"
           >
             <Icon v-if="isSaving" name="lucide:loader-2" class="icon" style="animation: spin 1s linear infinite;" />
@@ -179,7 +173,7 @@ const deleteArticle = async () => {
           <button
             v-if="form.status !== 'published'"
             class="btn btn--primary"
-            :disabled="isSaving"
+            :disabled="isSaving || isDeleting"
             @click="saveArticle(true)"
           >
             <Icon v-if="isSaving" name="lucide:loader-2" class="icon" style="animation: spin 1s linear infinite;" />
@@ -189,9 +183,12 @@ const deleteArticle = async () => {
         </div>
       </div>
 
+      <EditorSaveStatus :label="stateLabel" :dirty="isDirty" :saved-status="savedStatus" :saved-slug="savedSlug" section="blog" />
+
       <!-- Save Message -->
       <div
         v-if="saveMessage"
+        :role="saveMessage.type === 'error' ? 'alert' : 'status'"
         :class="['toast', `toast--${saveMessage.type}`]"
         style="margin-bottom: 1rem;"
       >
@@ -199,15 +196,16 @@ const deleteArticle = async () => {
         <span class="toast__message">{{ saveMessage.text }}</span>
       </div>
 
-      <div class="article-editor">
+      <fieldset class="article-editor editor-fields" aria-label="Articles editor" :disabled="isSaving || isDeleting">
         <!-- Main Content -->
         <div class="article-editor__main">
           <!-- Title -->
           <div class="admin-card">
             <div class="admin-card__body">
               <div class="form-group">
-                <label class="form-group__label">Title</label>
+                <label class="form-group__label" for="editor-title">Title</label>
                 <input
+                  id="editor-title"
                   v-model="form.title"
                   type="text"
                   class="form-input"
@@ -218,8 +216,9 @@ const deleteArticle = async () => {
               </div>
 
               <div class="form-group">
-                <label class="form-group__label">Slug</label>
+                <label class="form-group__label" for="editor-slug">Slug</label>
                 <input
+                  id="editor-slug"
                   v-model="form.slug"
                   type="text"
                   class="form-input"
@@ -231,8 +230,9 @@ const deleteArticle = async () => {
               </div>
 
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-group__label">Perex (Excerpt)</label>
+                <label class="form-group__label" for="editor-perex">Excerpt</label>
                 <textarea
+                  id="editor-perex"
                   v-model="form.perex"
                   class="form-textarea"
                   :class="{ 'form-input--error': errors.perex }"
@@ -324,7 +324,7 @@ const deleteArticle = async () => {
             </div>
           </div>
         </div>
-      </div>
+      </fieldset>
     </template>
 
     <!-- Delete Confirmation Modal -->

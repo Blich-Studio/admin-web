@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useEditorState } from '~/composables/useEditorState'
 import { useProjectsStore } from '~/stores/projects'
 import type { CreateProjectDto, ProjectChannel, ProjectLicense, ProjectPlatform } from '~/types/api'
+definePageMeta({ key: route => route.path })
 
 const router = useRouter()
 const projectsStore = useProjectsStore()
@@ -73,6 +75,8 @@ const projectLicenses: { value: ProjectLicense; label: string }[] = [
 
 const errors = ref<Record<string, string>>({})
 const isSaving = ref(false)
+const { snapshot, isDirty, savedStatus, savedSlug, stateLabel, acknowledge, permitNavigation } = useEditorState(form, isSaving, false)
+const createdId = ref<string | null>(null)
 const saveMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null)
 
 // Auto-generate slug from title
@@ -157,27 +161,34 @@ const validate = (): boolean => {
 
 // Save project
 const saveProject = async (publish = false) => {
-  if (!validate()) return
+  if (isSaving.value || !validate()) return
 
   isSaving.value = true
   saveMessage.value = null
+  const submitted = snapshot()
 
   try {
     const data: CreateProjectDto = {
-      ...form,
+      ...submitted,
       status: publish ? 'published' : form.status,
     }
 
-    const project = await projectsStore.createProject(data)
+    const project = createdId.value
+      ? await projectsStore.updateProject(createdId.value, data)
+      : await projectsStore.createProject(data)
+    createdId.value = project.id
+    acknowledge(submitted, { status: project.status ?? data.status ?? submitted.status, slug: project.slug })
     saveMessage.value = {
       type: 'success',
-      text: publish ? 'Project published!' : 'Project saved as draft',
+      text: isDirty.value ? 'Saved. Newer edits still need saving.' : savedStatus.value === 'published' ? 'Project published!' : 'Project saved',
     }
 
-    // Redirect to edit page after short delay
-    setTimeout(() => {
-      router.push(`/admin/projects/${project.id}`)
-    }, 1000)
+    // Do not drop edits (including completed uploads) made while the request ran.
+    if (!isDirty.value) {
+      const destination = `/admin/projects/${project.id}`
+      permitNavigation(destination)
+      await router.replace(destination)
+    }
   } catch (error) {
     saveMessage.value = {
       type: 'error',
@@ -206,7 +217,7 @@ const saveProject = async (publish = false) => {
           @click="saveProject(false)"
         >
           <Icon v-if="isSaving" name="lucide:loader-2" class="icon" style="animation: spin 1s linear infinite;" />
-          Save Draft
+          {{ createdId ? 'Save Changes' : form.status === 'draft' ? 'Save Draft' : 'Save' }}
         </button>
         <button
           class="btn btn--primary"
@@ -220,9 +231,12 @@ const saveProject = async (publish = false) => {
       </div>
     </div>
 
+    <EditorSaveStatus :label="stateLabel" :dirty="isDirty" :saved-status="savedStatus" :saved-slug="savedSlug" section="projects" />
+
     <!-- Save Message -->
     <div
       v-if="saveMessage"
+      :role="saveMessage.type === 'error' ? 'alert' : 'status'"
       :class="['toast', `toast--${saveMessage.type}`]"
       style="margin-bottom: 1rem;"
     >
@@ -230,15 +244,16 @@ const saveProject = async (publish = false) => {
       <span class="toast__message">{{ saveMessage.text }}</span>
     </div>
 
-    <div class="article-editor">
+    <fieldset class="article-editor editor-fields" aria-label="Projects editor" :disabled="isSaving">
       <!-- Main Content -->
       <div class="article-editor__main">
         <!-- Basic Info -->
         <div class="admin-card">
           <div class="admin-card__body">
             <div class="form-group">
-              <label class="form-group__label">Title <span class="required">*</span></label>
+              <label class="form-group__label" for="editor-title">Title <span class="required">*</span></label>
               <input
+                id="editor-title"
                 v-model="form.title"
                 type="text"
                 class="form-input"
@@ -249,8 +264,9 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">Slug <span class="required">*</span></label>
+              <label class="form-group__label" for="editor-slug">Slug <span class="required">*</span></label>
               <input
+                id="editor-slug"
                 v-model="form.slug"
                 type="text"
                 class="form-input"
@@ -263,8 +279,9 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">Short Description</label>
+              <label class="form-group__label" for="editor-shortDescription">Short Description</label>
               <textarea
+                id="editor-shortDescription"
                 v-model="form.shortDescription"
                 class="form-textarea"
                 placeholder="Brief summary for listings (optional)..."
@@ -298,8 +315,8 @@ const saveProject = async (publish = false) => {
           </div>
           <div class="admin-card__body">
             <div class="form-group">
-              <label class="form-group__label">Public Channel</label>
-              <select v-model="form.channel" class="form-select">
+              <label class="form-group__label" for="editor-channel">Public Channel</label>
+                <select id="editor-channel" v-model="form.channel" class="form-select">
                 <option :value="null">Archive only</option>
                 <option v-for="channel in projectChannels" :key="channel.value" :value="channel.value">
                   {{ channel.label }}
@@ -308,8 +325,8 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">Primary Platform</label>
-              <select v-model="form.platform" class="form-select">
+              <label class="form-group__label" for="editor-platform">Primary Platform</label>
+                <select id="editor-platform" v-model="form.platform" class="form-select">
                 <option :value="null">Not set</option>
                 <option v-for="platform in projectPlatforms" :key="platform.value" :value="platform.value">
                   {{ platform.label }}
@@ -318,8 +335,8 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">License</label>
-              <select v-model="form.license" class="form-select">
+              <label class="form-group__label" for="editor-license">License</label>
+                <select id="editor-license" v-model="form.license" class="form-select">
                 <option :value="null">Not set</option>
                 <option v-for="license in projectLicenses" :key="license.value" :value="license.value">
                   {{ license.label }}
@@ -328,11 +345,12 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">
+              <label class="form-group__label" for="editor-externalUrl">
                 <Icon name="lucide:external-link" />
                 Primary URL
               </label>
               <input
+                id="editor-externalUrl"
                 v-model="form.externalUrl"
                 type="url"
                 class="form-input"
@@ -343,11 +361,12 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">
+              <label class="form-group__label" for="editor-embedUrl">
                 <Icon name="lucide:code-2" />
                 Embed URL
               </label>
               <input
+                id="editor-embedUrl"
                 v-model="form.embedUrl"
                 type="url"
                 class="form-input"
@@ -358,11 +377,12 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">
+              <label class="form-group__label" for="editor-archiveUrl">
                 <Icon name="lucide:archive" />
                 Archive Mirror URL
               </label>
               <input
+                id="editor-archiveUrl"
                 v-model="form.archiveUrl"
                 type="url"
                 class="form-input"
@@ -373,11 +393,12 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">
+              <label class="form-group__label" for="editor-githubUrl">
                 <Icon name="simple-icons:github" />
                 GitHub URL
               </label>
               <input
+                id="editor-githubUrl"
                 v-model="form.githubUrl"
                 type="url"
                 class="form-input"
@@ -388,11 +409,12 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">
+              <label class="form-group__label" for="editor-itchioUrl">
                 <Icon name="simple-icons:itchdotio" />
                 itch.io URL
               </label>
               <input
+                id="editor-itchioUrl"
                 v-model="form.itchioUrl"
                 type="url"
                 class="form-input"
@@ -403,11 +425,12 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">
+              <label class="form-group__label" for="editor-steamUrl">
                 <Icon name="simple-icons:steam" />
                 Steam URL
               </label>
               <input
+                id="editor-steamUrl"
                 v-model="form.steamUrl"
                 type="url"
                 class="form-input"
@@ -418,11 +441,12 @@ const saveProject = async (publish = false) => {
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-group__label">
+              <label class="form-group__label" for="editor-youtubeUrl">
                 <Icon name="simple-icons:youtube" />
                 YouTube URL
               </label>
               <input
+                id="editor-youtubeUrl"
                 v-model="form.youtubeUrl"
                 type="url"
                 class="form-input"
@@ -500,7 +524,7 @@ const saveProject = async (publish = false) => {
           </div>
         </div>
       </div>
-    </div>
+    </fieldset>
   </div>
 </template>
 

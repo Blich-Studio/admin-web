@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useEditorState } from '~/composables/useEditorState'
 import { useArticlesStore } from '~/stores/articles'
 import type { CreateArticleDto } from '~/types/api'
+definePageMeta({ key: route => route.path })
 
 const router = useRouter()
 const articlesStore = useArticlesStore()
@@ -19,6 +21,8 @@ const form = reactive({
 
 const errors = ref<Record<string, string>>({})
 const isSaving = ref(false)
+const { snapshot, isDirty, savedStatus, savedSlug, stateLabel, acknowledge, permitNavigation } = useEditorState(form, isSaving, false)
+const createdId = ref<string | null>(null)
 const saveMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null)
 
 // Auto-generate slug from title
@@ -61,7 +65,7 @@ const validate = (): boolean => {
   }
 
   if (!form.perex.trim()) {
-    errors.value.perex = 'Perex (excerpt) is required'
+    errors.value.perex = 'Excerpt is required'
   }
 
   if (!form.content.trim()) {
@@ -73,27 +77,34 @@ const validate = (): boolean => {
 
 // Save article
 const saveArticle = async (publish = false) => {
-  if (!validate()) return
+  if (isSaving.value || !validate()) return
 
   isSaving.value = true
   saveMessage.value = null
+  const submitted = snapshot()
 
   try {
     const data: CreateArticleDto = {
-      ...form,
+      ...submitted,
       status: publish ? 'published' : form.status,
     }
 
-    const article = await articlesStore.createArticle(data)
+    const article = createdId.value
+      ? await articlesStore.updateArticle(createdId.value, data)
+      : await articlesStore.createArticle(data)
+    createdId.value = article.id
+    acknowledge(submitted, { status: article.status ?? data.status ?? submitted.status, slug: article.slug })
     saveMessage.value = {
       type: 'success',
-      text: publish ? 'Article published!' : 'Article saved as draft',
+      text: isDirty.value ? 'Saved. Newer edits still need saving.' : savedStatus.value === 'published' ? 'Article published!' : 'Article saved',
     }
 
-    // Redirect to edit page after short delay
-    setTimeout(() => {
-      router.push(`/admin/articles/${article.id}`)
-    }, 1000)
+    // Do not drop edits (including completed uploads) made while the request ran.
+    if (!isDirty.value) {
+      const destination = `/admin/articles/${article.id}`
+      permitNavigation(destination)
+      await router.replace(destination)
+    }
   } catch (error) {
     saveMessage.value = {
       type: 'error',
@@ -122,7 +133,7 @@ const saveArticle = async (publish = false) => {
           @click="saveArticle(false)"
         >
           <Icon v-if="isSaving" name="lucide:loader-2" class="icon" style="animation: spin 1s linear infinite;" />
-          Save Draft
+          {{ createdId ? 'Save Changes' : form.status === 'draft' ? 'Save Draft' : 'Save' }}
         </button>
         <button
           class="btn btn--primary"
@@ -136,9 +147,12 @@ const saveArticle = async (publish = false) => {
       </div>
     </div>
 
+    <EditorSaveStatus :label="stateLabel" :dirty="isDirty" :saved-status="savedStatus" :saved-slug="savedSlug" section="blog" />
+
     <!-- Save Message -->
     <div
       v-if="saveMessage"
+      :role="saveMessage.type === 'error' ? 'alert' : 'status'"
       :class="['toast', `toast--${saveMessage.type}`]"
       style="margin-bottom: 1rem;"
     >
@@ -146,15 +160,16 @@ const saveArticle = async (publish = false) => {
       <span class="toast__message">{{ saveMessage.text }}</span>
     </div>
 
-    <div class="article-editor">
+    <fieldset class="article-editor editor-fields" aria-label="Articles editor" :disabled="isSaving">
       <!-- Main Content -->
       <div class="article-editor__main">
         <!-- Title -->
         <div class="admin-card">
           <div class="admin-card__body">
             <div class="form-group">
-              <label class="form-group__label">Title</label>
+              <label class="form-group__label" for="editor-title">Title</label>
               <input
+                id="editor-title"
                 v-model="form.title"
                 type="text"
                 class="form-input"
@@ -165,8 +180,9 @@ const saveArticle = async (publish = false) => {
             </div>
 
             <div class="form-group">
-              <label class="form-group__label">Slug</label>
+              <label class="form-group__label" for="editor-slug">Slug</label>
               <input
+                id="editor-slug"
                 v-model="form.slug"
                 type="text"
                 class="form-input"
@@ -179,8 +195,9 @@ const saveArticle = async (publish = false) => {
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-group__label">Perex (Excerpt)</label>
+              <label class="form-group__label" for="editor-perex">Excerpt</label>
               <textarea
+                id="editor-perex"
                 v-model="form.perex"
                 class="form-textarea"
                 :class="{ 'form-input--error': errors.perex }"
@@ -255,6 +272,6 @@ const saveArticle = async (publish = false) => {
           </div>
         </div>
       </div>
-    </div>
+    </fieldset>
   </div>
 </template>
