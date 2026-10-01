@@ -276,3 +276,7 @@ Article and project editors show unsaved changes and the last saved visibility. 
 Save failures retain the form for retry. Creation moves straight to the new editor after success and avoids repeated creates while requests or navigation are pending. Navigation, logout, and closing the tab warn about unsaved changes. These are in-memory drafts, not autosave or offline recovery; browser crashes and concurrent edits in another tab are not covered.
 
 On phones, the CMS menu collapses and editor controls stack vertically.
+
+### CMS icons
+
+Lucide icons are bundled from `@iconify-json/lucide`: source scanning includes used icons in the client bundle, and the same-origin Nuxt icon endpoint serves the local collection for dynamic names. Keep `provider: 'server'` and external fallback disabled: the client-only CMS otherwise defaults to Iconify's external API, which the Content Security Policy deliberately does not allow. Do not broaden CSP to work around missing icons.
