@@ -48,6 +48,13 @@ export default defineNuxtConfig({
     '@pinia/nuxt'
   ],
   css: ['@/assets/css/main.scss'],
+  // Client-only rendering otherwise defaults to Iconify's external API, blocked by our CSP.
+  icon: {
+    provider: 'server',
+    fallbackToApi: false,
+    serverBundle: { collections: ['lucide'] },
+    clientBundle: { scan: true },
+  },
   nitro: {
     preset: 'bun',
     routeRules: {

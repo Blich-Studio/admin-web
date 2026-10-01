@@ -19,6 +19,7 @@
         "vue-router": "^4.6.3",
       },
       "devDependencies": {
+        "@iconify-json/lucide": "^1.2.138",
         "@nuxtjs/style-resources": "^1.2.2",
         "@types/node": "24.10.1",
         "@types/sanitize-html": "^2.16.1",
@@ -199,6 +200,8 @@
     "@humanwhocodes/module-importer": ["@humanwhocodes/module-importer@1.0.1", "", {}, "sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA=="],
 
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
+
+    "@iconify-json/lucide": ["@iconify-json/lucide@1.2.138", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-+J5+/6HOZsN6sG5PGNxGLcB0UCJtKrH2TPTNeSeXukRzR1C9QRocHaFjLRhoc14zE+XS2ss1i7QWPfunKpYHaQ=="],
 
     "@iconify/collections": ["@iconify/collections@1.0.637", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-/RJlWW7VJsqwQufjIM5a3LZ8FpxNZ7IkXML+hOw358Eg2XriBrjJQqSepK9S4WvFfDsSObFYPg/wzQ30iFP/5g=="],
 
